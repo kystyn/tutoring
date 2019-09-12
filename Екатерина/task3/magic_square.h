@@ -1,5 +1,7 @@
 #pragma once
 
-float ** fillMatrix( int N );
-void clearMatrix( float **data, int N );
-bool isMagicSquare( float *data, int N );
+int ** fillMatrix( int N );
+void clearMatrix( int **data, int N );
+bool isMagicSquare( int **data, int N );
+
+void runMagicSquare( void );
