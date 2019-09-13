@@ -13,11 +13,15 @@ int main( void )
               return -1;
           return 0;
       };
-      return sgn(cosx) * pow(abs(cosx), 1 / 3.0) / (3 * x * x * x  + x / 4);
+      return sgn(cosx) * pow(std::abs(cosx), 1 / 3.0) / (3 * x * x * x  + x / 4);
+  };
+
+  auto upperedF = [f]( double x ) -> double {
+      return f(x) + f(3);
   };
 
   std::cout << "Trapezium: " << integrateTrapezium(1, 3, f, 1e-6) << "\n" <<
-    "Monte Carlo: " << integrateMonteCarlo(1, 3, f, 1e-6) << "\n"; // 9
+    "Monte Carlo: " << integrateMonteCarlo(1, 3, 1, 10000, upperedF) + (3 - 1) * f(3) << "\n"; // 9
 
   return 0;
 }
