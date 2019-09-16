@@ -7,7 +7,7 @@ int checkPressure( std::string const &fileName )
     std::ifstream file(fileName, std::ios::binary);
 
     if (!file)
-        throw std::exception(("Bad file name " + fileName).c_str());
+        throw std::string("Bad file name ") + fileName;
 
     long long sumSystolic = 0, sumDiastolic = 0;
     int sys, diast;
@@ -17,7 +17,7 @@ int checkPressure( std::string const &fileName )
     {
         sumSystolic += sys;
         if (!(file >> diast))
-            throw std::exception("Bad file format");
+            throw std::string("Bad file format");
         sumDiastolic += diast;
         count++;
     }
