@@ -44,11 +44,14 @@ int main()
     scanQueue(q1);
     scanQueue(q2);
 
-    q1.merge(q2);
-    q1.sort([]( int v1, int v2 )
+    auto sorter = []( int v1, int v2 )
     {
         return v1 > v2;
-    });
+    };
+
+    q1.sort(sorter);
+    q2.sort(sorter);
+    q1.merge(q2, sorter);
 
     printQueue(q1);
 
