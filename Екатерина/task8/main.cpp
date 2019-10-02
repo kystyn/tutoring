@@ -12,15 +12,14 @@ void print( stack<string> &lines, int num, int &i ) {
     string cur;
 
     while (!lines.empty()) {
-        m.lock();
-
         if (num % 2 == i % 2) {
+            m.lock();
             cur = lines.top();
             lines.pop();
             std::cout << cur << " thread " << num << ' ' << "size: " << lines.size() << "\n";
             i++;
+            m.unlock();
         }
-        m.unlock();
     }
 }
 
