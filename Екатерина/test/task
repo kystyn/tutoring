@@ -1,0 +1,15 @@
+Написать программу, которая умеет:
+по-разному решать квадратное уравнение:
+    - всегда правильно
+    - всегда допускать ошибку в одном корне
+    - всегда допускать ошибку в двух корнях
+    работаем в поле комплексных чисел => всегда есть хотя один корень кратности два
+    либо два корня кратности один
+
+    !class square_equation -- коэффициенты кв. уравнения
+    !struct solution -- сколько корней, сами корни
+    !!!class Complex -- add, subtract, divide(float), divide( Complex ), multiply, print Re + i * Im
+    class basic_solver -- метод solve
+    class excellent_solver : public solver
+    class good_solver : public solver
+    class bad_solver : public solver
