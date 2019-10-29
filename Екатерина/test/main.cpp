@@ -29,15 +29,59 @@ using namespace std;
 
 // explicit конструктор нужен, чтобы потребовать от программиста явного вызова конкретной перегрузки конструктора
 
+class Vector
+{
+public:
+    Vector( double newX = 0, double newY = 0, double newZ = 0)
+    {
+        x = newX;
+        y = newY;
+        z = newZ;
+    }
 
+    Vector operator+( Vector const &w )
+    {
+//        Vector v(x + w.x, y + w.y, z + w.z);
+//        return v;
+        return Vector(x + w.x, y + w.y, z + w.z);
+    }
 
+    double operator[]( int i ) const
+    {
+        switch (i)
+        {
+        case 0:
+            return x;
+        case 1:
+            return y;
+        case 2:
+            return z;
+        }
+    }
+private:
+    double x, y, z;
+};
+
+std::ostream & operator<<( std::ostream &os /* <- cout */,
+                           Vector const &v )
+{
+    os << '(' << v[0] << ", " << v[1] << ", " << v[2] << ')';
+    return os;
+}
+
+Vector operator-( Vector const &v1, Vector const &v2 )
+{
+    return Vector(v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]);
+}
 
 int main()
 {
-    student
-            s(false),
-            v = student(true),
-            w(1);
+    Vector v(1, 2, 3), w(3, 4, 5), u;
+    u = v + w; // <=> u = v.operator+(w);
+    std::cout << u << std::endl;
+//    C-style:
+//    u = add(v, w);
+//    printf("%f %f %f", u[0], u[1], u[2]);
 
     return 0;
 }
