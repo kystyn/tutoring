@@ -9,6 +9,7 @@ Krotikov Sergei    */
 #include <ctype.h>
 
 #include "scanner.h"
+#include "infix2polish.h"
 #include "evaluator.h"
 #include "utils.h"
 
@@ -83,18 +84,25 @@ int main(int argc, char* argv[]) {
   ERR_STATUS readingCondition, parseCondition;
 
   do {
-    token_t *tokens = NULL;
-    int tokenLength = 0;
-    int tokenSize = 0;
+    token_t *infixTokens = NULL;
+    int infixLength = 0;
+    int infixSize = 0;
+
+    token_t *polishTokens = NULL;
+    int polishLength = 0;
+    int polishSize = 0;
+
     double evalRes = 0;
 
     str = NULL;
     readingCondition = Read(&str, &strSize, &strLength, input);
     if (readingCondition == NO_MEM)
       return -1;
-    parseCondition = ParseInput(str, strLength, &tokens, &tokenSize, &tokenLength);
-    Reverse(tokens, tokenLength, sizeof(token_t));
-    evalRes = Eval(tokens, tokenSize, tokenLength);
+    parseCondition = ParseInput(str, strLength, &infixTokens, &infixSize, &infixLength);
+    Reverse(infixTokens, infixLength, sizeof(token_t));
+    Infix2Polish(infixTokens, &infixLength, &polishTokens, &polishSize, &polishLength);
+    Reverse(polishTokens, polishLength, sizeof(token_t));
+    evalRes = Eval(polishTokens, polishSize, polishLength);
 
     if (parseCondition == NO_MEM)
       return -1;
