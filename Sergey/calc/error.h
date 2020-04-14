@@ -9,7 +9,8 @@ typedef enum {
     MANY_ARG,
     WRONG_NAME,
     EMPTY_STR,
-    STREAM_END
+    STREAM_END,
+    EMPTY
 } ERR_STATUS;
 
 #endif /* ERROR_H */

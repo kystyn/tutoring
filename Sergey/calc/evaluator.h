@@ -3,13 +3,9 @@
 
 #include "token.h"
 
-/*
-1 + 2 * 3 - 4 / 5
-polish:
-1 2 3 * + 4 5 / -
-1 6 + 4 5 / -
-*/
 // tokens - polish notation
-double eval(token_t *tokens, int tokensLength);
+// length - tokens count
+// size - byte count
+double Eval(token_t *tokens, int tokenSize, int tokensLength);
 
 #endif /* EVALUATOR_H */

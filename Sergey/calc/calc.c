@@ -9,6 +9,8 @@ Krotikov Sergei    */
 #include <ctype.h>
 
 #include "scanner.h"
+#include "evaluator.h"
+#include "utils.h"
 
 /*POSSIBLE ERRORS:
 -1 - not enough memory
@@ -36,7 +38,7 @@ int Checking(char* str, int length) {
 }
 
 
-void Print(char* str, int length, FILE* output) {
+void Print(char* str, int length, double evalRes, FILE* output) {
   int check = 0;
   check = Checking(str, length);
   /* Cases: 0 - string we should calculate
@@ -46,7 +48,7 @@ void Print(char* str, int length, FILE* output) {
     fprintf(output,"%s\n", str);
     break;
   default:
-    fprintf(output,"%s == 4\n", str);
+    fprintf(output,"%s == %f\n", str, evalRes);
     break;
   }
 }
@@ -76,21 +78,27 @@ int main(int argc, char* argv[]) {
 
   /* Main body */
   int strLength = 0;
+  int strSize = 0;
   char* str;
   ERR_STATUS readingCondition, parseCondition;
 
   do {
     token_t *tokens = NULL;
     int tokenLength = 0;
+    int tokenSize = 0;
+    double evalRes = 0;
 
     str = NULL;
-    readingCondition = Read(&str, &strLength, input);
+    readingCondition = Read(&str, &strSize, &strLength, input);
     if (readingCondition == NO_MEM)
       return -1;
-    parseCondition = ParseInput(str, strLength, &tokens, &tokenLength);
+    parseCondition = ParseInput(str, strLength, &tokens, &tokenSize, &tokenLength);
+    Reverse(tokens, tokenLength, sizeof(token_t));
+    evalRes = Eval(tokens, tokenSize, tokenLength);
+
     if (parseCondition == NO_MEM)
       return -1;
-    Print(str, strLength, output);
+    Print(str, strLength, evalRes, output);
     free(str);
 
     /*

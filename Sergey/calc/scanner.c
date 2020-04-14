@@ -11,21 +11,23 @@ int isOperator(char c) {
             c == '/' ||
             c == '*' ||
             c == '%' ||
-            c == '^';
+            c == '^' ||
+            c == '$'; // remove when test infix form
 }
 
 
 // length - data size
 // size - memory size
-ERR_STATUS Read(char** str, int* strLength, FILE* input) {
+ERR_STATUS Read(char** str, int *strSize, int* strLength, FILE* input) {
   int symbol;
-  int strSize = 0;
   int i = 0;
+
+  *strSize = 0;
 
   /* Main body */
   while ((symbol = getc(input)) != EOF && (symbol != 26)) {  // 26 - means ctrl+Z
     // Expand (or create) dynamic array
-    *str = expand(*str, &strSize, i + 1, sizeof(char));
+    *str = Expand(*str, strSize, i + 1, sizeof(char));
     if (*str == NULL) {
       printf("ERROR: Not enough memory");
       return NO_MEM;
@@ -48,11 +50,12 @@ ERR_STATUS Read(char** str, int* strLength, FILE* input) {
   return STREAM_END;
 }
 
-ERR_STATUS ParseInput(char *str, int strLength, token_t **tokens, int *tokenLength) {
+ERR_STATUS ParseInput(char *str, int strLength,
+                      token_t **tokens, int *tokenArraySize, int *tokenLength) {
 
     char symbol;
     int i = 0;
-    int tokenArraySize = 0;
+    *tokenArraySize = 0;
     while (i < strLength) {
         symbol = str[i];
         // parsing
@@ -75,7 +78,7 @@ ERR_STATUS ParseInput(char *str, int strLength, token_t **tokens, int *tokenLeng
             num = intPart + realPart;
 
             // write number to token array
-            *tokens = expand(*tokens, &tokenArraySize, *tokenLength, sizeof(token_t));
+            *tokens = Expand(*tokens, tokenArraySize, *tokenLength, sizeof(token_t));
             if (*tokens == NULL) {
                 printf("ERROR: Not enough memory");
                 return NO_MEM;
@@ -85,7 +88,7 @@ ERR_STATUS ParseInput(char *str, int strLength, token_t **tokens, int *tokenLeng
             (*tokenLength)++;
             // check symbol after readed numbers
             if (isOperator(symbol)) {
-                *tokens = expand(*tokens, &tokenArraySize, *tokenLength, sizeof(token_t));
+                *tokens = Expand(*tokens, tokenArraySize, *tokenLength, sizeof(token_t));
                 if (*tokens == NULL) {
                     printf("ERROR: Not enough memory");
                     return NO_MEM;
@@ -97,13 +100,20 @@ ERR_STATUS ParseInput(char *str, int strLength, token_t **tokens, int *tokenLeng
         }
         // operators
         else if (isOperator(symbol)) {
-            *tokens = expand(*tokens, &tokenArraySize, *tokenLength, sizeof(token_t));
+            *tokens = Expand(*tokens, tokenArraySize, *tokenLength, sizeof(token_t));
             if (*tokens == NULL) {
                 printf("ERROR: Not enough memory");
                 return NO_MEM;
             }
             (*tokens)[*tokenLength].type = OPERATOR;
             (*tokens)[*tokenLength].value.op = symbol;
+            if ((*tokens)[*tokenLength].value.op == '-') {
+              if(*tokenLength == 0)
+                (*tokens)[*tokenLength].value.op = '$';
+              else if((*tokens)[*tokenLength - 1].type == OPERATOR &&
+                      (*tokens)[*tokenLength - 1].value.op != ')')
+                (*tokens)[*tokenLength].value.op = '$';
+             }
             (*tokenLength)++;
         }
         i++;
