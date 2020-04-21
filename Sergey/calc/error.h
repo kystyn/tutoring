@@ -10,6 +10,7 @@ typedef enum {
     WRONG_NAME,
     EMPTY_STR,
     STREAM_END,
+    INCORRECT_OPPERATION,
     EMPTY
 } ERR_STATUS;
 

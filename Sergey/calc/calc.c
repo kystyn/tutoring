@@ -98,6 +98,8 @@ int main(int argc, char* argv[]) {
     readingCondition = Read(&str, &strSize, &strLength, input);
     if (readingCondition == NO_MEM)
       return -1;
+    if (readingCondition != OK)
+        break;
     parseCondition = ParseInput(str, strLength, &infixTokens, &infixSize, &infixLength);
     Reverse(infixTokens, infixLength, sizeof(token_t));
     Infix2Polish(infixTokens, &infixLength, &polishTokens, &polishSize, &polishLength);

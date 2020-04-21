@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <ctype.h>
+
 #include "scanner.h"
 #include "utils.h"
 #include "token.h"
@@ -25,7 +27,7 @@ ERR_STATUS Read(char** str, int *strSize, int* strLength, FILE* input) {
   *strSize = 0;
 
   /* Main body */
-  while ((symbol = getc(input)) != EOF && (symbol != 26)) {  // 26 - means ctrl+Z
+  while ((symbol = fgetc(input)) != EOF && (symbol != 26)) {  // 26 - means ctrl+Z
     // Expand (or create) dynamic array
     *str = Expand(*str, strSize, i + 1, sizeof(char));
     if (*str == NULL) {
@@ -43,8 +45,11 @@ ERR_STATUS Read(char** str, int *strSize, int* strLength, FILE* input) {
     i++;
   }
 
-  (*str)[i] = '\0';  // Cause i increses in last (cycle) iteration
-  *strLength = i + 1;     //when we add \0 the length increase by one
+  if (*str != NULL)
+  {
+      (*str)[i] = '\0';  // Cause i increses in last (cycle) iteration
+      *strLength = i + 1;     //when we add \0 the length increase by one
+  }
   if (i)   //It means that if str is zero length do not write anything
     return EMPTY_STR;
   return STREAM_END;
@@ -70,10 +75,11 @@ ERR_STATUS ParseInput(char *str, int strLength,
             for (; i < strLength && isdigit(symbol); symbol = str[++i])
                 intPart = intPart * 10 + (symbol - '0');
             // here real
-            if (symbol == '.')
-                for (symbol = str[++i]; i < strLength && isdigit(symbol);
+            if (symbol == '.') {
+              for (symbol = str[++i]; i < strLength && isdigit(symbol);
                      symbol = str[++i], degree10 /= 10.0)
-                    realPart += (symbol - '0') * degree10;
+                       realPart += (symbol - '0') * degree10;
+            }
 
             num = intPart + realPart;
 

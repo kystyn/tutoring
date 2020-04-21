@@ -8,7 +8,7 @@ void Infix2Polish(token_t *infixTokens, int *infixTokenLength,
 
 int GetPriority(token_t token);
 
-void DropOperators(token_t *operStack, int operStackSize, int *operStackLen,
-                   token_t **numStack, int *numStackSize, int *numStackLen, int priority);
+void DropOperators(token_t *operStack, int *operStackLen,token_t **numStack,
+                   int *numStackSize, int *numStackLen, int priority);
 
 #endif /* INFIX2POLISH_H */
