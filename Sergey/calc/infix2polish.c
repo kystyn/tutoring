@@ -23,13 +23,13 @@ void Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **polishT
     if (cur.type == NUMBER)
       Push(&numStack, &numStackSize, &numStackLen, sizeof(token_t), &cur);
     else {
-      if (cur.value.op == '(') {
+      if (cur.value.op == LBRACE) {
         Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
         continue;
       }
       else {
         DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur));
-        if (cur.value.op != ')')
+        if (cur.value.op != RBRACE)
           Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
       }
     }
@@ -47,23 +47,37 @@ void Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **polishT
 }
 
 /* 1 + 2 * 3 % 5 */
+//(1 + sin(2)) * 3
+// sin ( 2 )
+//1 2 sin + 3 *
 int GetPriority(token_t token) {
   // check table
   switch (token.value.op) {
-  case '(':
-  case ')':
+  case LBRACE:
+  case RBRACE:
     return 1;
-  case '+':
-  case '-':
+  case PLUS:
+  case MINUS:
     return 2;
-  case '*':
-  case '/':
+  case MUL:
+  case DIV:
     return 3;
-  case '%':
+  case MOD:
     return 4;
-  case '$':
-    return 5;
-  case '^':
+  case SIN:
+  case COS:
+  case TG:
+  case CTG:
+  case ASIN:
+  case ACOS:
+  case ATG:
+  case ACTG:
+  case LN:
+  case FLOOR:
+  case CEIL:
+  case SQRT:
+  case UNAR_MINUS:
+  case POW:
     return 5;    //If you will add new priority(correct Drop, ^case)
   default:
     return INCORRECT_OPPERATION;
@@ -77,13 +91,13 @@ void DropOperators(token_t* operStack, int* operStackLen, token_t** numStack,
 
   token_t power;
   power.type = OPERATOR;
-  power.value.op = '^';
+  power.value.op = MUL;
 
   while (Top(operStack, *operStackLen, sizeof(token_t), &dropable) == OK) {
     if (GetPriority(dropable) >= priority &&
             priority != GetPriority(power)) {            // second expression for ^
       Pop(operStack, operStackLen, sizeof(token_t), &dropable);
-      if (dropable.value.op != '(')
+      if (dropable.value.op != LBRACE)
         Push(numStack, numStackSize, numStackLen, sizeof(token_t), &dropable);
       else
         break;

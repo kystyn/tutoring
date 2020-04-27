@@ -30,34 +30,77 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength) {
             res.type = NUMBER;
 
             Pop(num_stack, &numStackLength, sizeof(token_t), &operand2);
-            if (top.value.op != '$') {
+            if (top.value.op < FIRST_UNAR) {
                 Pop(num_stack, &numStackLength, sizeof(token_t), &operand1);
 
                 switch (top.value.op)
                 {
-                case '+':
+                case PLUS:
                     res.value.num = operand1.value.num + operand2.value.num;
                     break;
-                case '-':
+                case MINUS:
                     res.value.num = operand1.value.num - operand2.value.num;
                     break;
-                case '/':
+                case DIV:
                     res.value.num = operand1.value.num / operand2.value.num;
                     break;
-                case '*':
+                case MUL:
                     res.value.num = operand1.value.num * operand2.value.num;
                     break;
-                case '%':
+                case MOD:
                     // maybe only for int
                     res.value.num = fmod(operand1.value.num, operand2.value.num);
                     break;
-                case '^':
+                case POW:
                     res.value.num = pow(operand1.value.num, operand2.value.num);
                     break;
                 }
             }
-            else
-                res.value.num = -operand2.value.num;
+            else {
+                switch (top.value.op)
+                {
+                case UNAR_MINUS:
+                    res.value.num = -operand2.value.num;
+                    break;
+                case SIN:
+                    res.value.num = sin(operand2.value.num);
+                    break;
+                case COS:
+                    res.value.num = cos(operand2.value.num);
+                    break;
+                case TG:
+                    res.value.num = tan(operand2.value.num);
+                    break;
+                case CTG:
+                    res.value.num = 1.0 / tan(operand2.value.num);
+                    break;
+                case ASIN:
+                    res.value.num = asin(operand2.value.num);
+                    break;
+                case ACOS:
+                    res.value.num = acos(operand2.value.num);
+                    break;
+                case ATG:
+                    res.value.num = atan(operand2.value.num);
+                    break;
+                case ACTG:
+                    res.value.num = atan(1.0 / operand2.value.num);
+                    //atg(y)==x <=> tg(x) == y <=>ctg(x) = 1/y <=> x = actg(1/y)
+                    break;
+                case LN:
+                    res.value.num = log(operand2.value.num);
+                    break;
+                case SQRT:
+                    res.value.num = sqrt(operand2.value.num);
+                    break;
+                case FLOOR:
+                    res.value.num = floor(operand2.value.num);
+                    break;
+                case CEIL:
+                    res.value.num = ceil(operand2.value.num);
+                    break;
+                }
+            }
 
             Push(&tokens, &tokenSize, &tokensLength, sizeof(token_t), &res);
             while (numStackLength != 0){
@@ -72,6 +115,9 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength) {
     }
 
     free(tokens);
+
+    Pop(num_stack, &numStackLength, sizeof(token_t), &top);
+    free(num_stack);
 
     return top.value.num;
 }

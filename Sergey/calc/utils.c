@@ -10,7 +10,7 @@ void* Expand( void* str, int *size, int wish_idx, int sizeOfType ) {
     // Malloc
     if (str == NULL) {
         *size = ARRAY_START_SIZE * sizeOfType;
-        return malloc(ARRAY_START_SIZE * sizeOfType);
+        return realloc(str, *size);
     }
     // Realloc case
     if (wish_idx * sizeOfType >= *size) {

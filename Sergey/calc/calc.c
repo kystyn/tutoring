@@ -4,6 +4,8 @@ Polytech 2020 spring
 1st course, AMI
 Krotikov Sergei    */
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -49,7 +51,7 @@ void Print(char* str, int length, double evalRes, FILE* output) {
     fprintf(output,"%s\n", str);
     break;
   default:
-    fprintf(output,"%s == %f\n", str, evalRes);
+    fprintf(output,"%s == %g\n", str, evalRes);
     break;
   }
 }
@@ -59,11 +61,13 @@ int main(int argc, char* argv[]) {
   /* Reading arguments and stream redirection*/
   FILE* input = stdin;
   FILE* output = stdout;
+
   //Max num of arguments == 2 and argv[0] == main.exe
   if (argc > 3) {
     printf("ERROR: too many arguments");
     return 10;
   }
+
   if (argc >= 2) {
     if ((input = fopen(argv[1], "r")) == NULL) {
       printf("ERROR: wrong file name.");
@@ -98,8 +102,10 @@ int main(int argc, char* argv[]) {
     readingCondition = Read(&str, &strSize, &strLength, input);
     if (readingCondition == NO_MEM)
       return -1;
-    if (readingCondition != OK)
-        break;
+    if (readingCondition != OK && readingCondition != STREAM_END)
+      break;
+
+    strLength -= 1; // because of \0
     parseCondition = ParseInput(str, strLength, &infixTokens, &infixSize, &infixLength);
     Reverse(infixTokens, infixLength, sizeof(token_t));
     Infix2Polish(infixTokens, &infixLength, &polishTokens, &polishSize, &polishLength);
@@ -110,13 +116,6 @@ int main(int argc, char* argv[]) {
       return -1;
     Print(str, strLength, evalRes, output);
     free(str);
-
-    /*
-     * if (readingCondition == STREAM_END) {
-     * free(str);
-     * break;
-     * }
-     */
   } while (readingCondition == OK);
 
   fclose(output);
