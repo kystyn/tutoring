@@ -85,7 +85,8 @@ int main(int argc, char* argv[]) {
   int strLength = 0;
   int strSize = 0;
   char* str;
-  ERR_STATUS readingCondition, parseCondition;
+  ERR_STATUS readingCondition, parseCondition,
+          evalStatus, inf2polStatus;
 
   do {
     token_t *infixTokens = NULL;
@@ -107,13 +108,28 @@ int main(int argc, char* argv[]) {
 
     strLength -= 1; // because of \0
     parseCondition = ParseInput(str, strLength, &infixTokens, &infixSize, &infixLength);
-    Reverse(infixTokens, infixLength, sizeof(token_t));
-    Infix2Polish(infixTokens, &infixLength, &polishTokens, &polishSize, &polishLength);
-    Reverse(polishTokens, polishLength, sizeof(token_t));
-    evalRes = Eval(polishTokens, polishSize, polishLength);
 
-    if (parseCondition == NO_MEM)
-      return -1;
+    if (parseCondition != OK) {
+        printf("ERROR: parser error\n");
+        free(infixTokens);
+        free(str);
+        continue;
+    }
+
+    Reverse(infixTokens, infixLength, sizeof(token_t));
+    inf2polStatus = Infix2Polish(infixTokens, &infixLength, &polishTokens, &polishSize, &polishLength);
+
+    if (inf2polStatus != OK) {
+        printf("ERROR: infix 2 polish error\n");
+        free(infixTokens);
+        free(str);
+        continue;
+    }
+
+    Reverse(polishTokens, polishLength, sizeof(token_t));
+    evalRes = Eval(polishTokens, polishSize, polishLength, &evalStatus);
+    if (evalStatus != OK)
+        printf("ERROR: eval error\n");
     Print(str, strLength, evalRes, output);
     free(str);
   } while (readingCondition == OK);

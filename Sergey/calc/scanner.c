@@ -166,6 +166,8 @@ ERR_STATUS ParseInput(char* str, int strLength,
 
       (*tokens)[*tokenLength].type = OPERATOR;
       (*tokens)[*tokenLength].value.op = GetOperatorByStr(opstr);
+      if ((*tokens)[*tokenLength].value.op == NOT_EXISTS)
+          return INCORRECT_OPERATION;
       if ((*tokens)[*tokenLength].value.op == MINUS) {
         if (*tokenLength == 0)
           (*tokens)[*tokenLength].value.op = UNAR_MINUS;

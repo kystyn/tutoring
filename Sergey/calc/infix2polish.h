@@ -3,7 +3,7 @@
 
 #include "token.h"
 
-void Infix2Polish(token_t *infixTokens, int *infixTokenLength,
+ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength,
                   token_t **polishTokens, int *polishTokenSize, int *polishTokenLength);
 
 int GetPriority(token_t token);

@@ -6,6 +6,6 @@
 // tokens - polish notation
 // length - tokens count
 // size - byte count
-double Eval(token_t *tokens, int tokenSize, int tokensLength);
+double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status);
 
 #endif /* EVALUATOR_H */

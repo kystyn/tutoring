@@ -15,7 +15,7 @@ polish:
 1 2 $ * 10 /
 */
 // top - left, bottom - right
-double Eval(token_t *tokens, int tokenSize, int tokensLength) {
+double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status) {
     token_t top;
     token_t *num_stack = NULL;
     int numStackSize = 0, numStackLength = 0;
@@ -117,7 +117,10 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength) {
     free(tokens);
 
     Pop(num_stack, &numStackLength, sizeof(token_t), &top);
-    free(num_stack);
+    if (numStackLength != 0)
+        *status = INCORRECT_OPERATION;
 
+    free(num_stack);
+    *status = OK;
     return top.value.num;
 }

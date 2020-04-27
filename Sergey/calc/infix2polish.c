@@ -5,7 +5,7 @@
 
 // --2 -> 2 $ $
 
-void Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **polishTokens,
+ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **polishTokens,
                   int *polishTokenSize, int *polishTokenLength) {
   token_t *operStack = NULL;
   token_t *numStack = NULL;
@@ -18,6 +18,7 @@ void Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **polishT
   int operStackSize = 0,
       operStackLen = 0;
 
+  // if not ok not to forget about num (polish) stack and oper stack
   while (*infixTokenLength != 0) {
     Pop(infixTokens, infixTokenLength, sizeof(token_t), &cur);
     if (cur.type == NUMBER)
@@ -44,6 +45,7 @@ void Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **polishT
   free(infixTokens);
   free(operStack);
   *infixTokenLength = 0;
+  return OK;
 }
 
 /* 1 + 2 * 3 % 5 */
@@ -80,7 +82,7 @@ int GetPriority(token_t token) {
   case POW:
     return 5;    //If you will add new priority(correct Drop, ^case)
   default:
-    return INCORRECT_OPPERATION;
+    return INCORRECT_OPERATION;
   }
 
 }
