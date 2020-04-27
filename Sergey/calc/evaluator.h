@@ -2,6 +2,7 @@
 #define EVALUATOR_H
 
 #include "token.h"
+#include "error.h"
 
 // tokens - polish notation
 // length - tokens count
