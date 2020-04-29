@@ -11,6 +11,7 @@ typedef enum {
     EMPTY_STR,
     STREAM_END,
     INCORRECT_OPERATION,
+    DEFAREA,
     EMPTY
 } ERR_STATUS;
 

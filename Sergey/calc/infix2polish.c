@@ -11,6 +11,14 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **p
   token_t *numStack = NULL;
   token_t cur;
 
+  enum {
+      WAIT_PREFIX,
+      WAIT_SUFFIX,
+      ERROR,
+      DONE
+  } state = WAIT_PREFIX;
+
+  ERR_STATUS status = OK;
 
   int numStackSize = 0,
       numStackLen = 0;
@@ -18,25 +26,74 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **p
   int operStackSize = 0,
       operStackLen = 0;
 
+  int meetLBrace;
+
   // if not ok not to forget about num (polish) stack and oper stack
-  while (*infixTokenLength != 0) {
-    Pop(infixTokens, infixTokenLength, sizeof(token_t), &cur);
-    if (cur.type == NUMBER)
-      Push(&numStack, &numStackSize, &numStackLen, sizeof(token_t), &cur);
-    else {
-      if (cur.value.op == LBRACE) {
-        Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
-        continue;
-      }
-      else {
-        DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur));
-        if (cur.value.op != RBRACE)
-          Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
-      }
+  while (state != DONE) {
+    if (state != ERROR) {
+        if (*infixTokenLength != 0)
+            Pop(infixTokens, infixTokenLength, sizeof(token_t), &cur);
+        else
+            state = DONE;
+    }
+
+    switch (state) {
+    case WAIT_PREFIX:
+        if (cur.type == NUMBER) {
+            Push(&numStack, &numStackSize, &numStackLen, sizeof(token_t), &cur);
+            state = WAIT_SUFFIX;
+        }
+        else if (cur.type == OPERATOR && cur.value.op == LBRACE) {
+            Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+            state = WAIT_PREFIX;
+        }
+        else if (cur.type == OPERATOR && cur.value.op > FIRST_UNAR) {
+            // need drop??
+            DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
+            Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+            state = WAIT_PREFIX;
+        }
+        else
+            state = ERROR;
+        break;
+    case WAIT_SUFFIX:
+        if (cur.type == OPERATOR && cur.value.op < FIRST_UNAR) {
+            DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
+            if (cur.value.op != RBRACE) {
+                Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+                state = WAIT_PREFIX;
+            }
+            else {
+                if (!meetLBrace)
+                    state = ERROR;
+                else
+                    state = WAIT_SUFFIX;
+            }
+        }
+        else
+            state = ERROR;
+        break;
+    case ERROR:
+        free(numStack);
+        *polishTokens = NULL;
+        *polishTokenSize = 0;
+        *polishTokenLength = 0;
+        state = DONE;
+        status = ERROR;
+        break;
+    case DONE:
+        cur.type = OPERATOR;
+        cur.value.op = RBRACE;
+        DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen,
+                      GetPriority(cur), &meetLBrace);
+        if (operStackLen != 0) {
+            state = ERROR;
+            while (operStackLen != 0)
+                Pop(operStack, &operStackLen, sizeof(token_t), &cur);
+        }
+        break;
     }
   }
-
-  DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, 0);
 
   *polishTokens = numStack;
   *polishTokenSize = numStackSize;
@@ -45,7 +102,8 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **p
   free(infixTokens);
   free(operStack);
   *infixTokenLength = 0;
-  return OK;
+
+  return status;
 }
 
 /* 1 + 2 * 3 % 5 */
@@ -88,12 +146,14 @@ int GetPriority(token_t token) {
 }
 
 void DropOperators(token_t* operStack, int* operStackLen, token_t** numStack, 
-                    int* numStackSize, int* numStackLen, int priority) {
+                    int* numStackSize, int* numStackLen, int priority, int *meetLBrace) {
   token_t dropable;
 
   token_t power;
   power.type = OPERATOR;
-  power.value.op = MUL;
+  power.value.op = POW;
+
+  *meetLBrace = 0;
 
   while (Top(operStack, *operStackLen, sizeof(token_t), &dropable) == OK) {
     if (GetPriority(dropable) >= priority &&
@@ -101,8 +161,10 @@ void DropOperators(token_t* operStack, int* operStackLen, token_t** numStack,
       Pop(operStack, operStackLen, sizeof(token_t), &dropable);
       if (dropable.value.op != LBRACE)
         Push(numStack, numStackSize, numStackLen, sizeof(token_t), &dropable);
-      else
+      else {
+        *meetLBrace = 1;
         break;
+      }
     }
     else
       break;

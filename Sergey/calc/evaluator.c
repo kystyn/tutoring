@@ -2,6 +2,7 @@
 #include <math.h>
 #include "evaluator.h"
 #include "stack.h"
+#include "error.h"
 
 /*
 1 + 2 * 3 - 4 / 5
@@ -19,6 +20,9 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status
     token_t top;
     token_t *num_stack = NULL;
     int numStackSize = 0, numStackLength = 0;
+
+    *status = OK;
+
     while (Top(tokens, tokensLength, sizeof(token_t), &top) != EMPTY) {
         Pop(tokens, &tokensLength, sizeof(token_t), &top);
         if (top.type == OPERATOR) {
@@ -29,9 +33,15 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status
             token_t tmpToTrans;
             res.type = NUMBER;
 
-            Pop(num_stack, &numStackLength, sizeof(token_t), &operand2);
+            if (Pop(num_stack, &numStackLength, sizeof(token_t), &operand2) != OK) {
+                *status = EMPTY;
+                break;
+            }
             if (top.value.op < FIRST_UNAR) {
-                Pop(num_stack, &numStackLength, sizeof(token_t), &operand1);
+                if (Pop(num_stack, &numStackLength, sizeof(token_t), &operand1) != OK) {
+                    *status = EMPTY;
+                    break;
+                }
 
                 switch (top.value.op)
                 {
@@ -42,7 +52,10 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status
                     res.value.num = operand1.value.num - operand2.value.num;
                     break;
                 case DIV:
-                    res.value.num = operand1.value.num / operand2.value.num;
+                    if (fabs(operand2.value.num) < 1e-8)
+                        *status = DEFAREA;
+                    else
+                        res.value.num = operand1.value.num / operand2.value.num;
                     break;
                 case MUL:
                     res.value.num = operand1.value.num * operand2.value.num;
@@ -52,7 +65,10 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status
                     res.value.num = fmod(operand1.value.num, operand2.value.num);
                     break;
                 case POW:
-                    res.value.num = pow(operand1.value.num, operand2.value.num);
+                    if (operand1.value.num < 0)
+                        *status = DEFAREA;
+                    else
+                        res.value.num = pow(operand1.value.num, operand2.value.num);
                     break;
                 }
             }
@@ -69,29 +85,54 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status
                     res.value.num = cos(operand2.value.num);
                     break;
                 case TG:
-                    res.value.num = tan(operand2.value.num);
+                    // remove pi / 2 + pi * k
+                    if (fabs((operand2.value.num - M_PI / 2) / M_PI -
+                            floor((operand2.value.num - M_PI / 2) / M_PI)) < 1e-8)
+                        *status = DEFAREA;
+                    else
+                        res.value.num = tan(operand2.value.num);
                     break;
                 case CTG:
-                    res.value.num = 1.0 / tan(operand2.value.num);
+                    // remove pi * k
+                    if (fabs(operand2.value.num / M_PI -
+                            floor(operand2.value.num / M_PI)) < 1e-8)
+                        *status = DEFAREA;
+                    else
+                        res.value.num = 1.0 / tan(operand2.value.num);
                     break;
                 case ASIN:
-                    res.value.num = asin(operand2.value.num);
+                    if (operand2.value.num < 0 || operand2.value.num > 1)
+                        *status = DEFAREA;
+                    else
+                        res.value.num = asin(operand2.value.num);
                     break;
                 case ACOS:
-                    res.value.num = acos(operand2.value.num);
+                    if (operand2.value.num < 0 || operand2.value.num > 1)
+                        *status = DEFAREA;
+                    else
+                        res.value.num = acos(operand2.value.num);
                     break;
                 case ATG:
                     res.value.num = atan(operand2.value.num);
                     break;
                 case ACTG:
-                    res.value.num = atan(1.0 / operand2.value.num);
+                    if (fabs(operand2.value.num) < 1e-8)
+                        res.value.num = M_PI / 2;
+                    else
+                        res.value.num = atan(1.0 / operand2.value.num);
                     //atg(y)==x <=> tg(x) == y <=>ctg(x) = 1/y <=> x = actg(1/y)
                     break;
                 case LN:
-                    res.value.num = log(operand2.value.num);
+                    if (operand2.value.num <= 1e-8)
+                        *status = DEFAREA;
+                    else
+                        res.value.num = log(operand2.value.num);
                     break;
                 case SQRT:
-                    res.value.num = sqrt(operand2.value.num);
+                    if (operand2.value.num < 0)
+                        *status = DEFAREA;
+                    else
+                        res.value.num = sqrt(operand2.value.num);
                     break;
                 case FLOOR:
                     res.value.num = floor(operand2.value.num);
@@ -101,9 +142,11 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status
                     break;
                 }
             }
+            if (*status != OK)
+                break;
 
             Push(&tokens, &tokenSize, &tokensLength, sizeof(token_t), &res);
-            while (numStackLength != 0){
+            while (numStackLength != 0) {
                 Pop(num_stack, &numStackLength, sizeof(token_t), &tmpToTrans);
                 Push(&tokens, &tokenSize, &tokensLength, sizeof(token_t), &tmpToTrans);
             }
@@ -121,6 +164,5 @@ double Eval(token_t *tokens, int tokenSize, int tokensLength, ERR_STATUS *status
         *status = INCORRECT_OPERATION;
 
     free(num_stack);
-    *status = OK;
     return top.value.num;
 }

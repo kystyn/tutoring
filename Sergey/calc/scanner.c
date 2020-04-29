@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 
 #include "scanner.h"
 #include "utils.h"
@@ -110,7 +111,7 @@ ERR_STATUS ParseInput(char* str, int strLength,
       }
       // scientific notation
       if (symbol == 'e') {
-          if (i + 1 < strLength)
+          if (i + 1 < strLength) {
               if (str[i + 1] == '+') {
                   expSign = 1;
                   i += 2;
@@ -121,6 +122,7 @@ ERR_STATUS ParseInput(char* str, int strLength,
               }
               else if (isdigit(str[i + 1]))
                   i += 1;
+          }
           for (symbol = str[i]; i < strLength && isdigit(symbol); symbol = str[++i])
             expPart = expPart * 10 + (symbol - '0');
       }
@@ -138,15 +140,14 @@ ERR_STATUS ParseInput(char* str, int strLength,
       (*tokenLength)++;
       // check symbol after readed numbers
       // no i++!
-      if (IsOperator(symbol))
-          continue;
+      continue;
     }
     // skip white space
     else if (isspace(symbol)) {}
-    // operators
+    // operators and pi and e
     else {
       char opstr[30] = { 0 };
-      unsigned int j;
+      unsigned int j = 1;
 
       *tokens = Expand(*tokens, tokenArraySize, *tokenLength, sizeof(token_t));
       if (*tokens == NULL) {
@@ -164,16 +165,26 @@ ERR_STATUS ParseInput(char* str, int strLength,
                j < sizeof(opstr); symbol = str[++i], j++)
             opstr[j] = symbol;
 
-      (*tokens)[*tokenLength].type = OPERATOR;
-      (*tokens)[*tokenLength].value.op = GetOperatorByStr(opstr);
-      if ((*tokens)[*tokenLength].value.op == NOT_EXISTS)
-          return INCORRECT_OPERATION;
-      if ((*tokens)[*tokenLength].value.op == MINUS) {
-        if (*tokenLength == 0)
-          (*tokens)[*tokenLength].value.op = UNAR_MINUS;
-        else if ((*tokens)[*tokenLength - 1].type == OPERATOR &&
-          (*tokens)[*tokenLength - 1].value.op != RBRACE)
-          (*tokens)[*tokenLength].value.op = UNAR_MINUS;
+      if (strcmp(opstr, "pi") == 0) {
+          (*tokens)[*tokenLength].type = NUMBER;
+          (*tokens)[*tokenLength].value.num = M_PI;
+      }
+      else if (strcmp(opstr, "e") == 0) {
+          (*tokens)[*tokenLength].type = NUMBER;
+          (*tokens)[*tokenLength].value.num = M_E;
+      }
+      else {
+          (*tokens)[*tokenLength].type = OPERATOR;
+          (*tokens)[*tokenLength].value.op = GetOperatorByStr(opstr);
+          if ((*tokens)[*tokenLength].value.op == NOT_EXISTS)
+              return INCORRECT_OPERATION;
+          if ((*tokens)[*tokenLength].value.op == MINUS) {
+            if (*tokenLength == 0)
+              (*tokens)[*tokenLength].value.op = UNAR_MINUS;
+            else if ((*tokens)[*tokenLength - 1].type == OPERATOR &&
+              (*tokens)[*tokenLength - 1].value.op != RBRACE)
+              (*tokens)[*tokenLength].value.op = UNAR_MINUS;
+          }
       }
       (*tokenLength)++;
       // if really scanned operator - no i++ in the loop end

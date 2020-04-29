@@ -121,7 +121,6 @@ int main(int argc, char* argv[]) {
 
     if (inf2polStatus != OK) {
         printf("ERROR: infix 2 polish error\n");
-        free(infixTokens);
         free(str);
         continue;
     }
@@ -130,7 +129,8 @@ int main(int argc, char* argv[]) {
     evalRes = Eval(polishTokens, polishSize, polishLength, &evalStatus);
     if (evalStatus != OK)
         printf("ERROR: eval error\n");
-    Print(str, strLength, evalRes, output);
+    else
+        Print(str, strLength, evalRes, output);
     free(str);
   } while (readingCondition == OK);
 
