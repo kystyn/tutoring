@@ -10,6 +10,8 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **p
   token_t *operStack = NULL;
   token_t *numStack = NULL;
   token_t cur;
+  cur.type = NUMBER;
+  cur.value.num = 1;   //initialized because of warning
 
   enum {
       WAIT_PREFIX,
@@ -31,67 +33,76 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **p
   // if not ok not to forget about num (polish) stack and oper stack
   while (state != DONE) {
     if (state != ERROR) {
-        if (*infixTokenLength != 0)
-            Pop(infixTokens, infixTokenLength, sizeof(token_t), &cur);
-        else
-            state = DONE;
+      if (*infixTokenLength != 0)
+        Pop(infixTokens, infixTokenLength, sizeof(token_t), &cur);
+      else
+        state = DONE;
     }
 
     switch (state) {
     case WAIT_PREFIX:
-        if (cur.type == NUMBER) {
-            Push(&numStack, &numStackSize, &numStackLen, sizeof(token_t), &cur);
+      if (cur.type == NUMBER) {
+        Push(&numStack, &numStackSize, &numStackLen, sizeof(token_t), &cur);
+        state = WAIT_SUFFIX;
+      }
+      else if (cur.type == OPERATOR && cur.value.op == LBRACE) {
+        Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+        state = WAIT_PREFIX;
+      }
+      else if (cur.type == OPERATOR && cur.value.op > FIRST_UNAR) {
+        // need drop??
+        DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
+        Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+        state = WAIT_PREFIX;
+      }
+      else {
+        state = ERROR;
+        status = I2P_NO_PREFIX;
+      }
+      break;
+    case WAIT_SUFFIX:
+      if (cur.type == OPERATOR && cur.value.op < FIRST_UNAR) {
+        DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
+        if (cur.value.op != RBRACE) {
+          Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+          state = WAIT_PREFIX;
+        }
+        else {
+          if (!meetLBrace) {
+            state = ERROR;
+            status = I2P_NO_SUFFIX;
+          }
+          else
             state = WAIT_SUFFIX;
         }
-        else if (cur.type == OPERATOR && cur.value.op == LBRACE) {
-            Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
-            state = WAIT_PREFIX;
-        }
-        else if (cur.type == OPERATOR && cur.value.op > FIRST_UNAR) {
-            // need drop??
-            DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
-            Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
-            state = WAIT_PREFIX;
-        }
-        else
-            state = ERROR;
-        break;
-    case WAIT_SUFFIX:
-        if (cur.type == OPERATOR && cur.value.op < FIRST_UNAR) {
-            DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
-            if (cur.value.op != RBRACE) {
-                Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
-                state = WAIT_PREFIX;
-            }
-            else {
-                if (!meetLBrace)
-                    state = ERROR;
-                else
-                    state = WAIT_SUFFIX;
-            }
-        }
-        else
-            state = ERROR;
-        break;
+      }
+      else {
+        state = ERROR;
+        status = I2P_NO_SUFFIX;
+      }
+      break;
     case ERROR:
-        free(numStack);
-        *polishTokens = NULL;
-        *polishTokenSize = 0;
-        *polishTokenLength = 0;
-        state = DONE;
-        status = ERROR;
-        break;
+      free(numStack);
+
+      // kostyl' (actually shouldn't be called
+      if (status == OK)
+          status = I2P_NO_SUFFIX;
+
+      numStack = NULL;
+      *polishTokens = NULL;
+      *polishTokenSize = 0;
+      *polishTokenLength = 0;
+      state = DONE;
+      break;
     case DONE:
-        cur.type = OPERATOR;
-        cur.value.op = RBRACE;
-        DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen,
-                      GetPriority(cur), &meetLBrace);
-        if (operStackLen != 0) {
-            state = ERROR;
-            while (operStackLen != 0)
-                Pop(operStack, &operStackLen, sizeof(token_t), &cur);
-        }
-        break;
+      cur.type = OPERATOR;
+      cur.value.op = RBRACE;
+      DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
+      if (operStackLen != 0 || meetLBrace == 1) {
+        state = ERROR;
+        status = I2P_PROBLEM_BRACKETS;
+      }
+      break;
     }
   }
 
@@ -114,8 +125,9 @@ int GetPriority(token_t token) {
   // check table
   switch (token.value.op) {
   case LBRACE:
+      return 0;
   case RBRACE:
-    return 1;
+    return -1;
   case PLUS:
   case MINUS:
     return 2;
@@ -124,6 +136,9 @@ int GetPriority(token_t token) {
     return 3;
   case MOD:
     return 4;
+  case UNAR_MINUS:
+  case POW:
+    return 5;
   case SIN:
   case COS:
   case TG:
@@ -136,9 +151,8 @@ int GetPriority(token_t token) {
   case FLOOR:
   case CEIL:
   case SQRT:
-  case UNAR_MINUS:
-  case POW:
-    return 5;    //If you will add new priority(correct Drop, ^case)
+      return 6;
+    //If you will add new priority(correct Drop, ^case)
   default:
     return INCORRECT_OPERATION;
   }
@@ -156,9 +170,9 @@ void DropOperators(token_t* operStack, int* operStackLen, token_t** numStack,
   *meetLBrace = 0;
 
   while (Top(operStack, *operStackLen, sizeof(token_t), &dropable) == OK) {
-    if (GetPriority(dropable) >= priority &&
-            priority != GetPriority(power)) {            // second expression for ^
-      Pop(operStack, operStackLen, sizeof(token_t), &dropable);
+    if ((GetPriority(dropable) >= priority && priority != GetPriority(power)) ||
+            GetPriority(dropable) > priority) {            // second expression for ^
+        Pop(operStack, operStackLen, sizeof(token_t), &dropable);
       if (dropable.value.op != LBRACE)
         Push(numStack, numStackSize, numStackLen, sizeof(token_t), &dropable);
       else {

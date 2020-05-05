@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
-
 #include "scanner.h"
 #include "utils.h"
 #include "token.h"
@@ -19,19 +19,19 @@ int IsOperator(char c) {
 }
 
 
-operator_t GetOperatorByStr( char* str ) {
-    char *variants[] = { "+", "-", "*", "/", "^", "%", "(", ")",
-                         "sin", "cos", "tg", "ctg", "arcsin", "arccos",
-                         "arctg", "arcctg", "ln", "floor", "ceil", "sqrt" };
-    operator_t operators[] = {PLUS, MINUS, MUL, DIV, POW, MOD, LBRACE, RBRACE,
-                           SIN, COS, TG, CTG, ASIN, ACOS, ATG, ACTG, LN, FLOOR,
-                           CEIL, SQRT};
-    unsigned int i;
-    for (i = 0; i < sizeof(variants) / sizeof(variants[0]); i++) {
-        if (strcmp(variants[i], str) == 0)
-            return operators[i];
-    }
-    return NOT_EXISTS;
+operator_t GetOperatorByStr(char* str) {
+  char* variants[] = { "+", "-", "*", "/", "^", "%", "(", ")",
+                       "sin", "cos", "tg", "ctg", "arcsin", "arccos",
+                       "arctg", "arcctg", "ln", "floor", "ceil", "sqrt" };
+  operator_t operators[] = { PLUS, MINUS, MUL, DIV, POW, MOD, LBRACE, RBRACE,
+                            SIN, COS, TG, CTG, ASIN, ACOS, ATG, ACTG, LN, FLOOR,
+                            CEIL, SQRT };
+  unsigned int i;
+  for (i = 0; i < sizeof(variants) / sizeof(variants[0]); i++) {
+    if (strcmp(variants[i], str) == 0)
+      return operators[i];
+  }
+  return NOT_EXISTS;
 }
 
 // length - data size
@@ -46,10 +46,8 @@ ERR_STATUS Read(char** str, int *strSize, int* strLength, FILE* input) {
   while ((symbol = fgetc(input)) != EOF && (symbol != 26)) {  // 26 - means ctrl+Z
     // Expand (or create) dynamic array
     *str = Expand(*str, strSize, i + 1, sizeof(char));
-    if (*str == NULL) {
-      printf("ERROR: Not enough memory");
+    if (*str == NULL) 
       return NO_MEM;
-    }
     //Save character by character to an array
     (*str)[i] = (char)symbol; // S4: russian symbol! hazardous!!
     *strLength = i + 1;
@@ -92,12 +90,10 @@ ERR_STATUS ParseInput(char* str, int strLength,
     // parsing
     // if digit
     if (isdigit(symbol)) {
-      double
-        num = 0,
-        intPart = 0,
-        realPart = 0;
-      int
-        expPart = 0;
+      double num = 0,
+             intPart = 0,
+             realPart = 0;
+      int expPart = 0;
       int expSign = 1;
       double degree10 = 0.1;
       // here only integers
@@ -111,20 +107,20 @@ ERR_STATUS ParseInput(char* str, int strLength,
       }
       // scientific notation
       if (symbol == 'e') {
-          if (i + 1 < strLength) {
-              if (str[i + 1] == '+') {
-                  expSign = 1;
-                  i += 2;
-              }
-              else if (str[i + 1] == '-') {
-                  expSign = -1;
-                  i += 2;
-              }
-              else if (isdigit(str[i + 1]))
-                  i += 1;
+        if (i + 1 < strLength) {
+          if (str[i + 1] == '+') {
+            expSign = 1;
+            i += 2;
           }
-          for (symbol = str[i]; i < strLength && isdigit(symbol); symbol = str[++i])
-            expPart = expPart * 10 + (symbol - '0');
+          else if (str[i + 1] == '-') {
+            expSign = -1;
+            i += 2;
+          }
+          else if (isdigit(str[i + 1]))
+            i += 1;
+        }
+        for (symbol = str[i]; i < strLength && isdigit(symbol); symbol = str[++i])
+          expPart = expPart * 10 + (symbol - '0');
       }
 
       num = (intPart + realPart) * pow10(expSign * expPart);

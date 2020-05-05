@@ -38,8 +38,8 @@ typedef enum {
 typedef struct tag_token_t {
   token_type_t type;
   union {
-      double num;
-      operator_t op;
+    double num;
+    operator_t op;
   } value;
 } token_t;
 //#pragma pack(pop)
