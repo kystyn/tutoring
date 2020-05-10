@@ -2,12 +2,16 @@
 #include "utils.h"
 #include "stack.h"
 
-void Push(void **stack, int *size, int *stackLength, int sizeOfType, void *dataToPush) {
+ERR_STATUS Push(void **stack, int *size, int *stackLength, int sizeOfType, void *dataToPush) {
     *stack = Expand(*stack, size, *stackLength, sizeOfType);
+    if (*stack == NULL)
+        return NO_MEM;
     memcpy(((char *)(*stack)) + (*stackLength)++ * sizeOfType, dataToPush, sizeOfType);
 }
 
 ERR_STATUS Pop(void *stack, int *stackLength, int sizeOfType, void *dataToPop) {
+    if (stack == NULL) // shouldn't happen
+        return NO_MEM;
     if (*stackLength == 0)
         return EMPTY;
     memmove(dataToPop, ((char *)stack) + ((*stackLength)-- - 1) * sizeOfType, sizeOfType);

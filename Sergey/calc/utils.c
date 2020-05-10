@@ -12,10 +12,10 @@ void* Expand(void* str, int* size, int wish_idx, int sizeOfType) {
   // Malloc
   if (str == NULL) {
     *size = ARRAY_START_SIZE * sizeOfType;
-    return realloc(str, *size);
+    return malloc(*size);
   }
   // Realloc case
-  if (wish_idx * sizeOfType >= *size) {
+  if (wish_idx * sizeOfType >= *    size) {
     *size = (wish_idx + ARRAY_INCR) * sizeOfType; /* can do smth like size *= 1.3 */
     strcheck = realloc(str, *size);
     if (strcheck == NULL) {
@@ -27,13 +27,12 @@ void* Expand(void* str, int* size, int wish_idx, int sizeOfType) {
   return str;
 }
 
-void Reverse(void* arr, int elemCount, int sizeOfType) {
+ERR_STATUS Reverse(void* arr, int elemCount, int sizeOfType) {
   int idx;
   char* tmp = malloc(sizeOfType);
-  if (tmp == NULL) {
-    printf("ERROR: no mem");
-    return;
-  }
+
+  if (tmp == NULL)
+    return NO_MEM;
 
   for (idx = 0; idx < elemCount / 2; idx++) {
     // t = a, a = b, b = t
@@ -43,6 +42,8 @@ void Reverse(void* arr, int elemCount, int sizeOfType) {
   }
 
   free(tmp);
+
+  return OK;
 }
 
 ERR_STATUS Checking(char* str, int length) {

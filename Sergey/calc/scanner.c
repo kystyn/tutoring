@@ -42,32 +42,50 @@ ERR_STATUS Read(char** str, int *strSize, int* strLength, FILE* input) {
 
   *strSize = 0;
 
+  ERR_STATUS status = OK;
+
   /* Main body */
   while ((symbol = fgetc(input)) != EOF && (symbol != 26)) {  // 26 - means ctrl+Z
     // Expand (or create) dynamic array
     *str = Expand(*str, strSize, i + 1, sizeof(char));
-    if (*str == NULL) 
-      return NO_MEM;
+    if (*str == NULL)
+        status = NO_MEM;
+
     //Save character by character to an array
-    (*str)[i] = (char)symbol; // S4: russian symbol! hazardous!!
-    *strLength = i + 1;
+    if (status != NO_MEM)
+    {
+        (*str)[i] = (char)symbol; // S4: russian symbol! hazardous!!
+        *strLength = i + 1;
+    }
+
     if (symbol == '\n'){
-      (*str)[i] = '\0';
-      return OK;
+      if (status != NO_MEM)
+        (*str)[i] = '\0';
+      return status;
     }
 
     i++;
   }
 
+  if (status != NO_MEM)
+    status = STREAM_END;
+
   if (*str != NULL)
   {
       *str = Expand(*str, strSize, i + 1, sizeof(char));
+      if (*str == NULL)
+          return NO_MEM;
       (*str)[i] = '\0';  // Cause i increses in last (cycle) iteration
       *strLength = i + 1;     //when we add \0 the length increase by one
   }
-  if (i == 0)   //It means that if str is zero length do not write anything
-    return EMPTY_STR;
-  return STREAM_END;
+  /*
+  if (i == 0)
+  {
+      if (status == OK) //It means that if str is zero length do not write anything
+        return EMPTY_STR;
+      return NO_MEM;
+  }*/
+  return status;
 }
 
 double pow10( int exp ) {
@@ -84,6 +102,7 @@ ERR_STATUS ParseInput(char* str, int strLength,
 
   char symbol;
   int i = 0;
+  int flag = 0;
   *tokenArraySize = 0;
   while (i < strLength) {
     symbol = str[i];
@@ -119,8 +138,13 @@ ERR_STATUS ParseInput(char* str, int strLength,
           else if (isdigit(str[i + 1]))
             i += 1;
         }
-        for (symbol = str[i]; i < strLength && isdigit(symbol); symbol = str[++i])
+        for (symbol = str[i], flag = 0; i < strLength && isdigit(symbol); symbol = str[++i], flag++)
           expPart = expPart * 10 + (symbol - '0');
+
+        if (flag == 0) {
+          return PARSER_ERR;
+        }
+        
       }
 
       num = (intPart + realPart) * pow10(expSign * expPart);
@@ -128,7 +152,7 @@ ERR_STATUS ParseInput(char* str, int strLength,
       // write number to token array
       *tokens = Expand(*tokens, tokenArraySize, *tokenLength, sizeof(token_t));
       if (*tokens == NULL) {
-        printf("ERROR: Not enough memory");
+        printf("ERROR: Not enough memory\n");
         return NO_MEM;
       }
       (*tokens)[*tokenLength].type = NUMBER;
@@ -147,7 +171,7 @@ ERR_STATUS ParseInput(char* str, int strLength,
 
       *tokens = Expand(*tokens, tokenArraySize, *tokenLength, sizeof(token_t));
       if (*tokens == NULL) {
-        printf("ERROR: Not enough memory");
+        printf("ERROR: Not enough memory\n");
         return NO_MEM;
       }
 

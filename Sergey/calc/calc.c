@@ -122,44 +122,68 @@ int main(int argc, char* argv[]) {
     str = NULL;
     readingCondition = Read(&str, &strSize, &strLength, input);
     if (readingCondition == NO_MEM) {
-      printf("ERROR: Not enough memory");
-      return -1;
+      printf("ERROR: Not enough memory\n");
+      continue;
     }
-    if (readingCondition != OK && readingCondition != STREAM_END)
-      break;
+    else if (readingCondition == STREAM_END /* EMPTY_STR */)
+        continue;
 
     checkStr = Checking(str, strLength);
     if (checkStr == OK) {
       strLength -= 1; // because of \0
       parseCondition = ParseInput(str, strLength, &infixTokens, &infixSize, &infixLength);
       if (parseCondition != OK) {
-        Print(str, 1, output, PARSER_ERR);
+        if (parseCondition != NO_MEM)
+            Print(str, 1, output, PARSER_ERR);
         free(infixTokens);
         free(str);
         continue;
       }
 
-      Reverse(infixTokens, infixLength, sizeof(token_t));
+      if (Reverse(infixTokens, infixLength, sizeof(token_t)) == NO_MEM) {
+          printf("ERROR: Not enough memory\n");
+          free(infixTokens);
+          free(str);
+          continue;
+      }
+
       inf2polStatus = Infix2Polish(infixTokens, &infixLength, &polishTokens, &polishSize, &polishLength);
       if (inf2polStatus != OK) {
-        Print(str, 1, output, inf2polStatus);
+          if (inf2polStatus == NO_MEM)
+              printf("ERROR: Not enough memory\n");
+          else
+            Print(str, 1, output, inf2polStatus);
         free(str);
         continue;
       }
 
       assert(polishTokens != NULL);
-      Reverse(polishTokens, polishLength, sizeof(token_t));
+      if (Reverse(polishTokens, polishLength, sizeof(token_t)) == NO_MEM) {
+          printf("ERROR: Not enough memory\n");
+          free(infixTokens);
+          free(polishTokens);
+          free(str);
+          continue;
+      }
       evalRes = Eval(polishTokens, polishSize, polishLength, &evalStatus);
       if (evalStatus != OK)
-        Print(str, 1, output, evalStatus);
+      {
+          if (evalStatus == NO_MEM)
+              printf("ERROR: Not enough memory\n");
+          else
+            Print(str, 1, output, evalStatus);
+      }
       else
         Print(str, evalRes, output, checkStr);
       free(str);
     }
     else 
+    {
       Print(str, 1, output, checkStr);
+      free(str);
+    }
 
-  } while (readingCondition == OK);
+  } while (readingCondition != STREAM_END);
 
   fclose(output);
   fclose(input);

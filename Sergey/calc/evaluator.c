@@ -145,16 +145,48 @@ double Eval(token_t* tokens, int tokenSize, int tokensLength, ERR_STATUS* status
       if (*status != OK)
         break;
 
-      Push(&tokens, &tokenSize, &tokensLength, sizeof(token_t), &res);
+      if (Push(&tokens, &tokenSize, &tokensLength, sizeof(token_t), &res) == NO_MEM)
+      {
+          if (tokens != NULL)
+              free(tokens);
+
+          if (num_stack != NULL)
+              free(num_stack);
+
+          *status = NO_MEM;
+          return 0;
+      }
+
       while (numStackLength != 0) {
         Pop(num_stack, &numStackLength, sizeof(token_t), &tmpToTrans);
-        Push(&tokens, &tokenSize, &tokensLength, sizeof(token_t), &tmpToTrans);
+
+        if (Push(&tokens, &tokenSize, &tokensLength, sizeof(token_t), &tmpToTrans) == NO_MEM)
+        {
+            if (tokens != NULL)
+                free(tokens);
+
+            if (num_stack != NULL)
+                free(num_stack);
+
+            *status = NO_MEM;
+            return 0;
+        }
       }
       free(num_stack);
       num_stack = NULL;
     }
     else
-      Push(&num_stack, &numStackSize, &numStackLength, sizeof(token_t), &top);
+      if (Push(&num_stack, &numStackSize, &numStackLength, sizeof(token_t), &top) == NO_MEM)
+      {
+          if (tokens != NULL)
+              free(tokens);
+
+          if (num_stack != NULL)
+              free(num_stack);
+
+          *status = NO_MEM;
+          return 0;
+      }
   }
 
   free(tokens);

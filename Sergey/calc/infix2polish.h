@@ -9,7 +9,7 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength,
 
 int GetPriority(token_t token);
 
-void DropOperators(token_t *operStack, int *operStackLen,token_t **numStack,
+ERR_STATUS DropOperators(token_t *operStack, int *operStackLen,token_t **numStack,
                    int *numStackSize, int *numStackLen, int priority, int *meetLBrace);
 
 #endif /* INFIX2POLISH_H */

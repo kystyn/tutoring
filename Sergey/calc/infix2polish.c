@@ -42,17 +42,68 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **p
     switch (state) {
     case WAIT_PREFIX:
       if (cur.type == NUMBER) {
-        Push(&numStack, &numStackSize, &numStackLen, sizeof(token_t), &cur);
+        if (Push(&numStack, &numStackSize, &numStackLen, sizeof(token_t), &cur) == NO_MEM)
+        {
+            if (numStack != NULL)
+                free(numStack);
+
+            if (operStack != NULL)
+                free(operStack);
+
+            if (infixTokens != NULL)
+                free(infixTokens);
+
+            return NO_MEM;
+        }
         state = WAIT_SUFFIX;
       }
       else if (cur.type == OPERATOR && cur.value.op == LBRACE) {
-        Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+        if (Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur) == NO_MEM)
+        {
+            if (numStack != NULL)
+                free(numStack);
+
+            if (operStack != NULL)
+                free(operStack);
+
+            if (infixTokens != NULL)
+                free(infixTokens);
+
+            return NO_MEM;
+        }
         state = WAIT_PREFIX;
       }
       else if (cur.type == OPERATOR && cur.value.op > FIRST_UNAR) {
         // need drop??
-        DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
-        Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+        if (DropOperators(
+                    operStack, &operStackLen, &numStack, &numStackSize,
+                    &numStackLen, GetPriority(cur), &meetLBrace) == NO_MEM)
+        {
+            if (numStack != NULL)
+                free(numStack);
+
+            if (operStack != NULL)
+                free(operStack);
+
+            if (infixTokens != NULL)
+                free(infixTokens);
+
+            return NO_MEM;
+        }
+
+        if (Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur) == NO_MEM)
+        {
+            if (numStack != NULL)
+                free(numStack);
+
+            if (operStack != NULL)
+                free(operStack);
+
+            if (infixTokens != NULL)
+                free(infixTokens);
+
+            return NO_MEM;
+        }
         state = WAIT_PREFIX;
       }
       else {
@@ -62,9 +113,33 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **p
       break;
     case WAIT_SUFFIX:
       if (cur.type == OPERATOR && cur.value.op < FIRST_UNAR) {
-        DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
+        if (DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace) == NO_MEM)
+        {
+            if (numStack != NULL)
+                free(numStack);
+
+            if (operStack != NULL)
+                free(operStack);
+
+            if (infixTokens != NULL)
+                free(infixTokens);
+
+            return NO_MEM;
+        }
         if (cur.value.op != RBRACE) {
-          Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur);
+          if (Push(&operStack, &operStackSize, &operStackLen, sizeof(token_t), &cur) == NO_MEM)
+          {
+              if (numStack != NULL)
+                  free(numStack);
+
+              if (operStack != NULL)
+                  free(operStack);
+
+              if (infixTokens != NULL)
+                  free(infixTokens);
+
+              return NO_MEM;
+          }
           state = WAIT_PREFIX;
         }
         else {
@@ -97,7 +172,19 @@ ERR_STATUS Infix2Polish(token_t *infixTokens, int *infixTokenLength, token_t **p
     case DONE:
       cur.type = OPERATOR;
       cur.value.op = RBRACE;
-      DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace);
+      if (DropOperators(operStack, &operStackLen, &numStack, &numStackSize, &numStackLen, GetPriority(cur), &meetLBrace) == NO_MEM)
+      {
+          if (numStack != NULL)
+              free(numStack);
+
+          if (operStack != NULL)
+              free(operStack);
+
+          if (infixTokens != NULL)
+              free(infixTokens);
+
+          return NO_MEM;
+      }
       if (operStackLen != 0 || meetLBrace == 1) {
         state = ERROR;
         status = I2P_PROBLEM_BRACKETS;
@@ -159,7 +246,7 @@ int GetPriority(token_t token) {
 
 }
 
-void DropOperators(token_t* operStack, int* operStackLen, token_t** numStack, 
+ERR_STATUS DropOperators(token_t* operStack, int* operStackLen, token_t** numStack,
                     int* numStackSize, int* numStackLen, int priority, int *meetLBrace) {
   token_t dropable;
 
@@ -174,7 +261,10 @@ void DropOperators(token_t* operStack, int* operStackLen, token_t** numStack,
             GetPriority(dropable) > priority) {            // second expression for ^
         Pop(operStack, operStackLen, sizeof(token_t), &dropable);
       if (dropable.value.op != LBRACE)
-        Push(numStack, numStackSize, numStackLen, sizeof(token_t), &dropable);
+      {
+        if (Push(numStack, numStackSize, numStackLen, sizeof(token_t), &dropable) == NO_MEM)
+            return NO_MEM;
+      }
       else {
         *meetLBrace = 1;
         break;
@@ -183,4 +273,6 @@ void DropOperators(token_t* operStack, int* operStackLen, token_t** numStack,
     else
       break;
   }
+
+  return OK;
 }
