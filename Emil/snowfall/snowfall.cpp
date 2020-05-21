@@ -170,15 +170,19 @@ void fillField(Field &f, int w, int h, int wallCount)
 
 	for (int i = 0; i < wallCount; i++)
 	{
-		int idx = rand() % (w * h);
-		f.walls.insert(std::make_pair(idx / h, idx - idx / h * h));
+		int idx = rand() % (w * (h - 2));
+		f.walls.insert(std::make_pair(idx / (h - 2),
+			2 + idx - idx / (h - 2) * (h - 2)));
 	}
 }
 
 
 void emitSnowflake(Field &f, int xpos)
 {
-	f.snowflakes.insert(std::make_pair(xpos, 1));
+	// check that ther is no showflake just here
+	auto p = std::make_pair(xpos, 1);
+	if (f.snowflakes.find(p) == f.snowflakes.end())
+		f.snowflakes.insert(p);
 }
 
 void snowfall(Field &f)
