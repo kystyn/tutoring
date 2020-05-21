@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
-#include <ctime>
+#include <chrono>
 
 const int period = 100;
 
@@ -65,12 +65,15 @@ bool moveSnake( Snake &s, Field &f, int moveToX, int moveToY )
   if (f.appleCells.empty())
     return false;
 
-  static int t = -period;
+  static auto t = std::chrono::high_resolution_clock::now();
 
-  if (clock() - t < period)
+  if (
+	  std::chrono::duration_cast<std::chrono::milliseconds>(
+	  std::chrono::high_resolution_clock::now() - t).count() <
+	  period)
     return true;
 
-  t = clock();
+  t = std::chrono::high_resolution_clock::now();
 
   auto head = s.front();
 
