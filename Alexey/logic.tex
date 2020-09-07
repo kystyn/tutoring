@@ -1,0 +1,191 @@
+\section{Логические операции}
+
+\begin{definition}
+	Будем говорить, что операция является \textbf{сильной относительно значения}, если она принимает это значение \textbf{реже}, чем противоположное.
+\end{definition}
+
+\begin{definition}
+	Будем говорить, что операция является \textbf{слабой относительно значения}, если она принимает это значение \textbf{чаще}, чем противоположное.
+\end{definition}
+Пример: операция конъюнкции является сильной относительно единицы, поскольку она принимает её лишь в одном случае из четырёх возможных.
+
+\subsection{Логическое И}
+\subsubsection{Таблица истинности}
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			$x$ & $y$ & $x\&y$\\
+			\hline
+			0 & 0 & 0\\
+			\hline
+			0 & 1 & 0\\
+			\hline
+			1 & 0 & 0\\
+			\hline
+			1 & 1 & 1\\
+			\hline
+		\end{tabular}
+		\caption{Логическое И}
+	\end{center}
+\end{table}
+
+\subsubsection{Обозначения}
+Операция также называется \textbf{конъюнкцией}, обозначается через $\bigwedge$, AND, И.
+\begin{remark}
+	Не путать в C-подобных языках (и Java) с обозначением исключающего или!
+\end{remark}
+
+\subsubsection{Свойства}
+\begin{enumerate}
+	\item Данная операция полностью эквивалентна обыкновенному умножению, что легко проверяется подстановкой.
+	\item Данная операция является слабой относительно нуля.
+\end{enumerate}
+
+\subsection{Логическое ИЛИ}
+\subsubsection{Таблица истинности}
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			$x$ & $y$ & $x\bigvee y$\\
+			\hline
+			0 & 0 & 0\\
+			\hline
+			0 & 1 & 1\\
+			\hline
+			1 & 0 & 1\\
+			\hline
+			1 & 1 & 1\\
+			\hline
+		\end{tabular}
+		\caption{Логическое ИЛИ}
+	\end{center}
+\end{table}
+
+\subsubsection{Обозначения}
+Операция также называется \textbf{дизъюнкцией}, обозначается через $\textbar$, OR, ИЛИ.
+
+\subsubsection{Свойства}
+\begin{enumerate}
+	\item Данная операция является слабой относительно единицы.
+\end{enumerate}
+
+\subsection{Отрицание}
+\subsubsection{Таблица истинности}
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|c|c|}
+			\hline
+			$x$ & $\neg x$\\
+			\hline
+			0 & 1\\
+			\hline
+			1 & 0\\
+			\hline
+		\end{tabular}
+		\caption{Отрицание}
+	\end{center}
+\end{table}
+
+\subsubsection{Обозначения}
+Операция также называется \textbf{инверсией}. Имеет место обозначение $\overline{x}$.
+
+\subsubsection{Свойства}
+\begin{enumerate}
+	\item Данная операция не является сильной или слабой.
+	\item Операция полностью эквивалентна арифметическому действию $\neg{x} := 1 - x$, что легко проверяется подстановкой.
+\end{enumerate}
+
+
+\subsection{Импликация}
+\subsubsection{Таблица истинности}
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			$x$ & $y$ & $x\rightarrow y$\\
+			\hline
+			0 & 0 & 1\\
+			\hline
+			0 & 1 & 1\\
+			\hline
+			1 & 0 & 0\\
+			\hline
+			1 & 1 & 1\\
+			\hline
+		\end{tabular}
+		\caption{Импликация}
+	\end{center}
+\end{table}
+
+\subsubsection{Обозначения}
+Операция также называется \textbf{следованием}.
+
+\subsubsection{Свойства}
+\begin{enumerate}
+	\item Данная операция является слабой относительно единицы.
+	\item Операция полностью эквивалентна $\neg x \bigvee y$.
+\end{enumerate}
+\subsection{Эквиваленция}
+\subsubsection{Таблица истинности}
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			$x$ & $y$ & $x\leftrightarrow y$\\
+			\hline
+			0 & 0 & 0\\
+			\hline
+			0 & 1 & 0\\
+			\hline
+			1 & 0 & 0\\
+			\hline
+			1 & 1 & 1\\
+			\hline
+		\end{tabular}
+		\caption{Эквиваленция}
+	\end{center}
+\end{table}
+
+\subsubsection{Обозначения}
+Операция также называется \textbf{равносильностью}.
+
+\subsubsection{Свойства}
+\begin{enumerate}
+	\item Данная операция не является сильной.
+	\item Операция полностью эквивалентна $x \rightarrow y \& y \rightarrow x$.
+\end{enumerate}
+
+\subsection{Исключающее или}
+\subsubsection{Таблица истинности}
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			$x$ & $y$ & $x +_2 y$\\
+			\hline
+			0 & 0 & 0\\
+			\hline
+			0 & 1 & 1\\
+			\hline
+			1 & 0 & 1\\
+			\hline
+			1 & 1 & 0\\
+			\hline
+		\end{tabular}
+		\caption{Исключающее или}
+	\end{center}
+\end{table}
+
+\subsubsection{Обозначения}
+Имеют место обозначения: $\bigwedge$ в С-подобных языках и Java, XOR.
+
+\subsubsection{Свойства}
+\begin{enumerate}
+	\item Операция также называется \textbf{сложением по модулю 2}, поскольку является семантически эквивалентной ей: $x +_2 y := (x + y) mod 2$.
+	\item Данная операция не является сильной.
+	\item Операция является обратной к эквиваленции.
+\end{enumerate}
+
+

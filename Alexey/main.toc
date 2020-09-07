@@ -1,0 +1,26 @@
+\babel@toc {russian}{}
+\contentsline {section}{\numberline {1}Логические операции}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Логическое И}{2}{subsection.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.1}Таблица истинности}{2}{subsubsection.1.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.2}Обозначения}{2}{subsubsection.1.1.2}%
+\contentsline {subsubsection}{\numberline {1.1.3}Свойства}{2}{subsubsection.1.1.3}%
+\contentsline {subsection}{\numberline {1.2}Логическое ИЛИ}{3}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Таблица истинности}{3}{subsubsection.1.2.1}%
+\contentsline {subsubsection}{\numberline {1.2.2}Обозначения}{3}{subsubsection.1.2.2}%
+\contentsline {subsubsection}{\numberline {1.2.3}Свойства}{3}{subsubsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.3}Отрицание}{3}{subsection.1.3}%
+\contentsline {subsubsection}{\numberline {1.3.1}Таблица истинности}{3}{subsubsection.1.3.1}%
+\contentsline {subsubsection}{\numberline {1.3.2}Обозначения}{3}{subsubsection.1.3.2}%
+\contentsline {subsubsection}{\numberline {1.3.3}Свойства}{3}{subsubsection.1.3.3}%
+\contentsline {subsection}{\numberline {1.4}Импликация}{4}{subsection.1.4}%
+\contentsline {subsubsection}{\numberline {1.4.1}Таблица истинности}{4}{subsubsection.1.4.1}%
+\contentsline {subsubsection}{\numberline {1.4.2}Обозначения}{4}{subsubsection.1.4.2}%
+\contentsline {subsubsection}{\numberline {1.4.3}Свойства}{4}{subsubsection.1.4.3}%
+\contentsline {subsection}{\numberline {1.5}Эквиваленция}{4}{subsection.1.5}%
+\contentsline {subsubsection}{\numberline {1.5.1}Таблица истинности}{4}{subsubsection.1.5.1}%
+\contentsline {subsubsection}{\numberline {1.5.2}Обозначения}{4}{subsubsection.1.5.2}%
+\contentsline {subsubsection}{\numberline {1.5.3}Свойства}{4}{subsubsection.1.5.3}%
+\contentsline {subsection}{\numberline {1.6}Исключающее или}{5}{subsection.1.6}%
+\contentsline {subsubsection}{\numberline {1.6.1}Таблица истинности}{5}{subsubsection.1.6.1}%
+\contentsline {subsubsection}{\numberline {1.6.2}Обозначения}{5}{subsubsection.1.6.2}%
+\contentsline {subsubsection}{\numberline {1.6.3}Свойства}{5}{subsubsection.1.6.3}%
