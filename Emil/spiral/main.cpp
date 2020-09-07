@@ -159,3 +159,9 @@ int main()
     menu();
     return 0;
 }
+
+-5*((x+exp(-2x)-exp(-4x))*5exp(2x)+
+((-0.3cos(x)-0.1sin(x))exp(-x)+(0.4cos(x)-0.7sin(x))exp(-5x)+(-0.3cos(x)+0.9sin(x))*exp(-3x))*(8cos(x)+sin(x))*exp(3x)+
+((-0.7cos(x)-0.4sin(x))*exp(-5x)+(0.9cos(x)+0.3sin(x))*exp(-3x))*(8sin(x)-cos(x))*exp(3x))+
+11*()+
+6exp(2x)+10-11exp(-2x)
