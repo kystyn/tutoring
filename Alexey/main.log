@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.6.27)  7 SEP 2020 22:31
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.6.27)  11 SEP 2020 10:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -640,27 +640,35 @@ LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 )
+(/usr/share/texlive/texmf-dist/tex/latex/float/float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count267
+\float@exts=\toks23
+\float@box=\box48
+\@float@everytoks=\toks24
+\@floatcapt=\box49
+)
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.sty
-\lst@mode=\count267
-\lst@gtempboxa=\box48
-\lst@token=\toks23
-\lst@length=\count268
+\lst@mode=\count268
+\lst@gtempboxa=\box50
+\lst@token=\toks25
+\lst@length=\count269
 \lst@currlwidth=\dimen161
-\lst@column=\count269
-\lst@pos=\count270
+\lst@column=\count270
+\lst@pos=\count271
 \lst@lostspace=\dimen162
 \lst@width=\dimen163
-\lst@newlines=\count271
-\lst@lineno=\count272
+\lst@newlines=\count272
+\lst@lineno=\count273
 \abovecaptionskip=\skip51
 \belowcaptionskip=\skip52
 \lst@maxwidth=\dimen164
 
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2019/09/10 1.8c (Carsten Heinz)
-\c@lstnumber=\count273
-\lst@skipnumbers=\count274
-\lst@framebox=\box49
+\c@lstnumber=\count274
+\lst@skipnumbers=\count275
+\lst@framebox=\box51
 )
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg
 File: listings.cfg 2019/09/10 1.8c listings configuration
@@ -669,8 +677,8 @@ Package: listings 2019/09/10 1.8c (Carsten Heinz)
 )
 (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
 File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
-\l__kernel_color_stack_int=\count275
-\l__pdf_internal_box=\box50
+\l__kernel_color_stack_int=\count276
+\l__pdf_internal_box=\box52
 )
 (./main.aux (./logic.aux))
 \openout1 = `main.aux'.
@@ -698,17 +706,17 @@ LaTeX Font Info:    ... okay on input line 2.
 
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count276
+\scratchcounter=\count277
 \scratchdimen=\dimen165
-\scratchbox=\box51
-\nofMPsegments=\count277
-\nofMParguments=\count278
-\everyMPshowfont=\toks24
-\MPscratchCnt=\count279
+\scratchbox=\box53
+\nofMPsegments=\count278
+\nofMParguments=\count279
+\everyMPshowfont=\toks26
+\MPscratchCnt=\count280
 \MPscratchDim=\dimen166
-\MPnumerator=\count280
-\makeMPintoPDFobject=\count281
-\everyMPtoPDFconversion=\toks25
+\MPnumerator=\count281
+\makeMPintoPDFobject=\count282
+\everyMPtoPDFconversion=\toks27
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -752,7 +760,7 @@ e
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-\AtBeginShipoutBox=\box52
+\AtBeginShipoutBox=\box54
 Package hyperref Info: Link coloring ON on input line 2.
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
@@ -763,7 +771,7 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 (/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count282
+\c@section@level=\count283
 )
 LaTeX Info: Redefining \ref on input line 2.
 LaTeX Info: Redefining \pageref on input line 2.
@@ -773,7 +781,7 @@ LaTeX Info: Redefining \nameref on input line 2.
 \@outlinefile=\write3
 \openout3 = `main.out'.
 
-\c@lstlisting=\count283
+\c@lstlisting=\count284
 LaTeX Font Info:    Trying to load font information for U+msa on input line 4.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -801,61 +809,55 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 (./logic.tex
-\c@definition=\count284
-\c@table=\count285
-\c@remark=\count286
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: Command \textbar invalid in math mode on input line 67.
-
-
-Overfull \hbox (1.3156pt too wide) in paragraph at lines 67--68
-[]\T2A/cmr/m/n/14.4 Операция так-же на-зы-ва-ет-ся \T2A/cmr/bx/n/14.4 дизъ-юнк-
-ци-ей\T2A/cmr/m/n/14.4 , обо-зна-ча-ет-ся че-рез $\OMS/cmsy/m/n/14.4 j$\T2A/cmr
-/m/n/14.4 , OR, ИЛИ. 
- []
-
-[2
+\c@definition=\count285
+\c@table=\count286
+\c@remark=\count287
+ [2
 
 ]
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+LaTeX Warning: Command \textbar invalid in math mode on input line 68.
 
-[3] [4]) [5]
+
+Overfull \hbox (1.3156pt too wide) in paragraph at lines 68--69
+[]\T2A/cmr/m/n/14.4 Операция так-же на-зы-ва-ет-ся \T2A/cmr/bx/n/14.4 дизъ-юнк-
+ци-ей\T2A/cmr/m/n/14.4 , обо-зна-ча-ет-ся че-рез $\OMS/cmsy/m/n/14.4 j$\T2A/cmr
+/m/n/14.4 , OR, ИЛИ.
+ []
+
+[3] [4] [5]) [6]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 7.
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 7.
  (./main.aux (./logic.aux))
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 7.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 7.
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 0FBC17CB47BAFC5A37480D3A0F81B0D4;4111.
+(rerunfilecheck)             Checksum: 115735FE29180B4E0DFC0DE1FF3B5739;4353.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 7.
  ) 
 Here is how much of TeX's memory you used:
- 13774 strings out of 481239
- 195907 string characters out of 5920377
- 466422 words of memory out of 5000000
- 28728 multiletter control sequences out of 15000+600000
- 541568 words of font info for 43 fonts, out of 8000000 for 9000
+ 13842 strings out of 481239
+ 196736 string characters out of 5920377
+ 467919 words of memory out of 5000000
+ 28783 multiletter control sequences out of 15000+600000
+ 541909 words of font info for 44 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 59i,9n,41p,442b,375s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t2a.enc}</usr/share/texli
-ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/tex
-mf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/texlive/texmf-dis
-t/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts
-/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/
-public/amsfonts/cm/cmsy10.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfb
-i1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1200.pfb></usr/shar
-e/texmf/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf/fonts/type1/
-public/cm-super/sfbx1728.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm
-1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1440.pfb>
-Output written on main.pdf (5 pages, 149081 bytes).
+ 59i,9n,41p,991b,389s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc}{/usr/share/texmf
+/fonts/enc/dvips/cm-super/cm-super-t2a.enc}</usr/share/texlive/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmmi12.pfb></usr/share/texlive/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmsy10.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbi1440.pfb></usr/sha
+re/texmf/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf/fonts/type1
+/public/cm-super/sfbx1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfb
+x1728.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1200.pfb></usr/shar
+e/texmf/fonts/type1/public/cm-super/sfrm1440.pfb>
+Output written on main.pdf (6 pages, 159591 bytes).
 PDF statistics:
- 240 PDF objects out of 1000 (max. 8388607)
- 219 compressed objects within 3 object streams
- 52 named destinations out of 1000 (max. 500000)
- 201 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 261 PDF objects out of 1000 (max. 8388607)
+ 239 compressed objects within 3 object streams
+ 60 named destinations out of 1000 (max. 500000)
+ 209 words of extra memory for PDF output out of 10000 (max. 10000000)
 

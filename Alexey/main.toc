@@ -20,7 +20,8 @@
 \contentsline {subsubsection}{\numberline {1.5.1}Таблица истинности}{4}{subsubsection.1.5.1}%
 \contentsline {subsubsection}{\numberline {1.5.2}Обозначения}{4}{subsubsection.1.5.2}%
 \contentsline {subsubsection}{\numberline {1.5.3}Свойства}{4}{subsubsection.1.5.3}%
-\contentsline {subsection}{\numberline {1.6}Исключающее или}{5}{subsection.1.6}%
+\contentsline {subsection}{\numberline {1.6}Исключающее ИЛИ}{5}{subsection.1.6}%
 \contentsline {subsubsection}{\numberline {1.6.1}Таблица истинности}{5}{subsubsection.1.6.1}%
 \contentsline {subsubsection}{\numberline {1.6.2}Обозначения}{5}{subsubsection.1.6.2}%
 \contentsline {subsubsection}{\numberline {1.6.3}Свойства}{5}{subsubsection.1.6.3}%
+\contentsline {subsection}{\numberline {1.7}Практическое применение}{5}{subsection.1.7}%
