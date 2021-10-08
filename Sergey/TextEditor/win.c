@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "win.h"
+#include "text.h"
 
 /*  Make the class name into a global variable  */
 TCHAR szClassName[ ] = _T("CodeBlocksWindowsApp");
@@ -42,7 +43,7 @@ BOOL initWindow(HINSTANCE hThisInstance,
     hwnd = CreateWindowEx (
            0,                   /* Extended possibilites for variation */
            szClassName,         /* Classname */
-           _T("Code::Blocks Template Windows App"),       /* Title Text */
+           _T("Sergey uber reader"),       /* Title Text */
            WS_OVERLAPPEDWINDOW, /* default window */
            CW_USEDEFAULT,       /* Windows decides the position */
            CW_USEDEFAULT,       /* where the window ends up on the screen */
@@ -59,54 +60,104 @@ BOOL initWindow(HINSTANCE hThisInstance,
     return TRUE;
 }
 
+void WMPaint( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm )
+{
+    int y;
+    PAINTSTRUCT ps;
+
+    BeginPaint(hWnd, &ps);
+
+    for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
+        TextOut(ps.hdc, 0, (y - rd->currentRow) * tm->tmHeight,
+                td->strings[y] + rd->currentColumn,
+                strlen(td->strings[y]) - rd->currentColumn);
+
+    EndPaint(hWnd, &ps);
+}
+
+void WMSize( HWND hWnd, RenderData *rd, TEXTMETRIC *tm, int newW, int newH )
+{
+    RECT rc;
+
+    rd->symsPerW = newW / tm->tmAveCharWidth;
+    rd->symsPerH = newH / tm->tmHeight;
+    rd->screenWidth = newW;
+    rd->screenHeight = newH;
+
+    rc.top = 0;
+    rc.left = 0;
+    // TODO maybe pass width and height of screen received in WM_SIZE message
+    rc.bottom = rd->screenHeight - 1;
+    rc.right = rd->screenWidth - 1;
+    InvalidateRect(hWnd, &rc, TRUE);
+}
+
+void WMKeyDown( HWND hWnd, WPARAM wParam,
+                TextData *td, RenderData *rd )
+{
+    RECT rc;
+
+    switch (wParam)
+    {
+    case VK_RIGHT:
+        rd->currentColumn = rd->currentColumn + 1;
+        break;
+    case VK_LEFT:
+        rd->currentColumn = max(rd->currentColumn - 1, 0);
+        break;
+    case VK_UP:
+        rd->currentRow = max(rd->currentRow - 1, 0);
+        break;
+    case VK_DOWN:
+        rd->currentRow = min(rd->currentRow + 1, td->rowCount - 1);
+        break;
+    }
+
+    rc.top = 0;
+    rc.left = 0;
+    // TODO maybe pass width and height of screen received in WM_SIZE message
+    rc.bottom = rd->screenHeight - 1;
+    rc.right = rd->screenWidth - 1;
+    InvalidateRect(hWnd, &rc, TRUE);
+}
+
 /*  This function is called by the Windows function DispatchMessage()  */
 
-LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LPSTR file_name;
-    static int size = 0;
-    static char* buf = NULL;
+    static TextData td = {0};
+    static RenderData rd = {0};
+
+    static HDC hDC;
+    static TEXTMETRIC tm;
+    int rc;
+
     switch (message)                  /* handle the messages */
     {
-
         case WM_DESTROY:
             PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
             break;
         case WM_CREATE:
-            {
-            //CREATESTRUCT win = *lParam;
             file_name=(LPSTR)(((CREATESTRUCT*)lParam)->lpCreateParams);  //
-            FILE* fp=fopen(file_name,"r");
-            if(!fp)
-                break;
-
-            fseek(fp, 0L, SEEK_END);
-            size = ftell(fp);
-            rewind(fp);
-            buf = (char*)malloc(sizeof(char)*(size+1));
-            //fgets(buf,size,fp);
-            fread(buf,sizeof(char),size,fp);
-            printf(buf);
-
-            InvalidateRect(hwnd, NULL, NULL);
-
-            fclose(fp);
-            free(buf);
-            }
+            hDC = GetDC(hWnd);
+            GetTextMetrics(hDC, &tm);
+            rc = readFile((char *)file_name, &td);
+            if (!rc)
+                MessageBox(hWnd, "Couldn't read a file", "Error", 0);
             break;
-
+        case WM_SIZE:
+            WMSize(hWnd, &rd, &tm, LOWORD(lParam), HIWORD(lParam));
+            break;
         case WM_PAINT:
-            {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            TextOutA(hdc, 100, 50, buf, size);
-            EndPaint(hwnd, &ps);
-            }
-
+            WMPaint(hWnd, &td, &rd, &tm);
             break;
-
+        case WM_KEYDOWN:
+            WMKeyDown(hWnd, wParam, &td, &rd);
+            break;
         default:                      /* for messages that we don't deal with */
-            return DefWindowProc (hwnd, message, wParam, lParam);
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        // TODO WM_CLOSE and free all data
     }
 
     return 0;

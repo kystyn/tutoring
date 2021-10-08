@@ -15,3 +15,22 @@
 1633620291 source:c:\users\damas\programsme\texteditor\main.c
 	"win.h"
 
+1633620291 source:c:\users\damas\programsme\tutoring\sergey\texteditor\main.c
+	"win.h"
+
+1633619720 c:\users\damas\programsme\tutoring\sergey\texteditor\win.h
+	<windows.h>
+
+1633704184 source:c:\users\damas\programsme\tutoring\sergey\texteditor\win.c
+	<tchar.h>
+	<stdio.h>
+	"win.h"
+	"text.h"
+
+1633702719 c:\users\damas\programsme\tutoring\sergey\texteditor\text.h
+	<windows.h>
+
+1633701007 source:c:\users\damas\programsme\tutoring\sergey\texteditor\text.c
+	<stdio.h>
+	"text.h"
+
