@@ -1,0 +1,17 @@
+# depslib dependency file v1.0
+1633619846 source:c:\users\damas\programsme\texteditor\main.cpp
+	"win.h"
+
+1633618544 source:c:\users\damas\programsme\texteditor\text.c
+
+1633619841 source:c:\users\damas\programsme\texteditor\win.c
+	<tchar.h>
+	<stdio.h>
+	"win.h"
+
+1633619720 c:\users\damas\programsme\texteditor\win.h
+	<windows.h>
+
+1633620291 source:c:\users\damas\programsme\texteditor\main.c
+	"win.h"
+
