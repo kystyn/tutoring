@@ -21,16 +21,16 @@
 1633619720 c:\users\damas\programsme\tutoring\sergey\texteditor\win.h
 	<windows.h>
 
-1633704184 source:c:\users\damas\programsme\tutoring\sergey\texteditor\win.c
+1634140506 source:c:\users\damas\programsme\tutoring\sergey\texteditor\win.c
 	<tchar.h>
 	<stdio.h>
 	"win.h"
 	"text.h"
 
-1633702719 c:\users\damas\programsme\tutoring\sergey\texteditor\text.h
+1634137113 c:\users\damas\programsme\tutoring\sergey\texteditor\text.h
 	<windows.h>
 
-1633701007 source:c:\users\damas\programsme\tutoring\sergey\texteditor\text.c
+1634136640 source:c:\users\damas\programsme\tutoring\sergey\texteditor\text.c
 	<stdio.h>
 	"text.h"
 

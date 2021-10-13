@@ -60,7 +60,7 @@ BOOL initWindow(HINSTANCE hThisInstance,
     return TRUE;
 }
 
-void WMPaint( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm )
+void WMPaint( HWND hWnd, TextData *td, RenderData *rd )
 {
     int y;
     PAINTSTRUCT ps;
@@ -68,7 +68,7 @@ void WMPaint( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm )
     BeginPaint(hWnd, &ps);
 
     for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
-        TextOut(ps.hdc, 0, (y - rd->currentRow) * tm->tmHeight,
+        TextOut(ps.hdc, 0, (y - rd->currentRow) * rd->textHeight,
                 td->buf + td->offsets[y] + rd->currentColumn,
                 max(0, td->offsets[y + 1] - td->offsets[y] - 1 - rd->currentColumn));
 
@@ -121,6 +121,37 @@ void WMKeyDown( HWND hWnd, WPARAM wParam,
     InvalidateRect(hWnd, &rc, TRUE);
 }
 
+void WMVScroll( HWND hWnd, WPARAM wParam,
+                TextData *td, RenderData *rd )
+{
+    int pos = HIWORD(wParam);
+    int minScroll, maxScroll;
+
+    switch (LOWORD(wParam))
+    {
+    case SB_THUMBTRACK:
+        GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
+        rd->currentRow = (float)(pos - minScroll) / (maxScroll - minScroll) * (td->rowCount - 1);
+        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+        printf("row: %i count: %i pos: %i\n", rd->currentRow, td->rowCount, pos);
+    break;
+    case SB_LINEDOWN:
+    case SB_LINEUP:
+    case SB_PAGEUP:
+    case SB_PAGEDOWN:
+        break;
+    }
+
+    RECT rc;
+    // TODO
+    GetWindowRect(hWnd, &rc);
+    rc.right = rc.right - rc.left;
+    rc.left = 0;
+    rc.bottom = rc.bottom - rc.top;
+    rc.top = 0;
+    InvalidateRect(hWnd, &rc, TRUE);
+}
+
 /*  This function is called by the Windows function DispatchMessage()  */
 
 LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
@@ -142,18 +173,30 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
             file_name=(LPSTR)(((CREATESTRUCT*)lParam)->lpCreateParams);  //
             hDC = GetDC(hWnd);
             GetTextMetrics(hDC, &tm);
+            rd.textHeight = tm.tmHeight;
             rc = readFile((char *)file_name, &td);
             if (!rc)
                 MessageBox(hWnd, "Couldn't read a file", "Error", 0);
+
+            ShowScrollBar(hWnd, SB_HORZ, TRUE);
+            SetScrollRange(hWnd, SB_HORZ, 0, 1000, TRUE);
+
+            ShowScrollBar(hWnd, SB_VERT, TRUE);
+            SetScrollRange(hWnd, SB_VERT, 0, 1000, TRUE);
             break;
         case WM_SIZE:
             WMSize(hWnd, &rd, &tm, LOWORD(lParam), HIWORD(lParam));
             break;
         case WM_PAINT:
-            WMPaint(hWnd, &td, &rd, &tm);
+            WMPaint(hWnd, &td, &rd);
             break;
         case WM_KEYDOWN:
             WMKeyDown(hWnd, wParam, &td, &rd);
+            break;
+        case WM_VSCROLL:
+            WMVScroll(hWnd, wParam, &td, &rd);
+            break;
+        case WM_HSCROLL:
             break;
         default:                      /* for messages that we don't deal with */
             return DefWindowProc(hWnd, message, wParam, lParam);

@@ -11,6 +11,7 @@ typedef struct tagRenderData
     int symsPerH;       /* Symbols count per screen height */
     int screenWidth;    /* Screen width */
     int screenHeight;   /* Screen height */
+    int textHeight;
 } RenderData;
 
 typedef struct tagTextData
