@@ -69,8 +69,8 @@ void WMPaint( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm )
 
     for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
         TextOut(ps.hdc, 0, (y - rd->currentRow) * tm->tmHeight,
-                td->strings[y] + rd->currentColumn,
-                strlen(td->strings[y]) - rd->currentColumn);
+                td->buf + td->offsets[y] + rd->currentColumn,
+                max(0, td->offsets[y + 1] - td->offsets[y] - 1 - rd->currentColumn));
 
     EndPaint(hWnd, &ps);
 }

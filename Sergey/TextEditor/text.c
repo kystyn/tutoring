@@ -1,51 +1,26 @@
 #include <stdio.h>
 #include "text.h"
 
-int calcSymbolsCount( char *buf, int bufLen, char sym )
+BOOL splitTextIntoStrings( TextData *td )
 {
-    int i;
-    int count = 0;
+    int i, curStr = 0;
+    td->rowCount = 0;
 
-    for (i = 0; i < bufLen; i++)
-        count += buf[i] == sym;
+    for (i = 0; i < td->bufLen; i++)
+        if (td->buf[i] == '\n' || i == td->bufLen - 1)
+            td->rowCount++;
 
-    if (buf[bufLen - 1] != '\n')
-        count++;
+    td->offsets = malloc(sizeof(int) * (td->rowCount + 1));
 
-    return count;
-}
-
-BOOL splitTextIntoStrings( char *buf, int bufLen, TextData *td )
-{
-    int curLen = 0, i, j, numStr = 0;
-
-    td->strings = malloc(sizeof(char *) * td->rowCount);
-
-    if (td->strings == NULL)
+    if (td->offsets == NULL)
         return FALSE;
 
-    for (i = 0; i < bufLen; i++)
-        if (buf[i] == '\n' || i == bufLen - 1)
-        {
-            td->strings[numStr] = malloc(sizeof(char) * (curLen + 1));
-            memset(td->strings[numStr], 0, sizeof(char) * (curLen + 1));
-            if (td->strings[numStr] == NULL)
-            {
-                for (j = 0; j < numStr; j++)
-                    free(td->strings[j]);
-                break;
-            }
-            // куда, откуда, сколько
-            // |[a;b)| == b - a
-            // b==buf + i
-            // b-a==curLen => a = b - curLen
-            // TODO количество символов в последней строке
-            strncpy(td->strings[numStr], buf + i - curLen, curLen);
-            curLen = 0;
-            numStr++;
-        }
-        else
-            curLen++;
+    td->offsets[curStr++] = 0;
+    for (i = 0; i < td->bufLen; i++)
+        if (td->buf[i] == '\n')
+            td->offsets[curStr++] = i + 1;
+
+    td->offsets[curStr++] = td->bufLen;
 
     return TRUE;
 }
@@ -53,36 +28,30 @@ BOOL splitTextIntoStrings( char *buf, int bufLen, TextData *td )
 BOOL readFile( char *fileName, TextData *td )
 {
     FILE* fp = fopen(fileName, "r");
-    int size, rc;
-    char *buf;
-
+    int rc;
     if (!fp)
         return FALSE;
 
     fseek(fp, 0L, SEEK_END);
-    size = ftell(fp);
+    td->bufLen = ftell(fp);
     rewind(fp);
-    buf = malloc(sizeof(char) * (size + 1));
+    td->buf = malloc(sizeof(char) * (td->bufLen + 1));
 
-    if (buf == NULL)
+    if (td->buf == NULL)
     {
         fclose(fp);
         return FALSE;
     }
 
-    fread(buf, sizeof(char), size, fp);
+    fread(td->buf, sizeof(char), td->bufLen, fp);
     fclose(fp);
 
-    td->rowCount = calcSymbolsCount(buf, size, '\n');
-
-    rc = splitTextIntoStrings(buf, size, td);
+    rc = splitTextIntoStrings(td);
     if (!rc)
     {
-        free(buf);
+        free(td->buf);
         return FALSE;
     }
-
-    free(buf);
 
     return TRUE;
 }
