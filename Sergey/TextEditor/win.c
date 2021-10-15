@@ -87,8 +87,8 @@ void WMSize( HWND hWnd, RenderData *rd, TEXTMETRIC *tm, int newW, int newH )
     rc.top = 0;
     rc.left = 0;
     // TODO maybe pass width and height of screen received in WM_SIZE message
-    rc.bottom = rd->screenHeight - 1;
-    rc.right = rd->screenWidth - 1;
+    rc.bottom = rd->screenHeight;
+    rc.right = rd->screenWidth;
     InvalidateRect(hWnd, &rc, TRUE);
 }
 
@@ -96,28 +96,39 @@ void WMKeyDown( HWND hWnd, WPARAM wParam,
                 TextData *td, RenderData *rd )
 {
     RECT rc;
+    int pos;
+    int minscroll, maxscroll;
+    //GetScrollRange()
 
     switch (wParam)
     {
     case VK_RIGHT:
         rd->currentColumn = rd->currentColumn + 1;
+        pos = 0;
+        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
         break;
     case VK_LEFT:
         rd->currentColumn = max(rd->currentColumn - 1, 0);
+        pos = 0;
+        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
         break;
     case VK_UP:
         rd->currentRow = max(rd->currentRow - 1, 0);
+        pos = 0;
+        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
         break;
     case VK_DOWN:
-        rd->currentRow = min(rd->currentRow + 1, td->rowCount - 1);
+        rd->currentRow = min(rd->currentRow + 1, td->rowCount - rd->symsPerH);
+        pos = 0;
+        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
         break;
     }
 
     rc.top = 0;
     rc.left = 0;
     // TODO maybe pass width and height of screen received in WM_SIZE message
-    rc.bottom = rd->screenHeight - 1;
-    rc.right = rd->screenWidth - 1;
+    rc.bottom = rd->screenHeight;
+    rc.right = rd->screenWidth;
     InvalidateRect(hWnd, &rc, TRUE);
 }
 
@@ -131,9 +142,41 @@ void WMVScroll( HWND hWnd, WPARAM wParam,
     {
     case SB_THUMBTRACK:
         GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
-        rd->currentRow = (float)(pos - minScroll) / (maxScroll - minScroll) * (td->rowCount - 1);
+        rd->currentRow = (float)(pos - minScroll) / (maxScroll - minScroll) * (td->rowCount - rd->symsPerH);
         SetScrollPos(hWnd, SB_VERT, pos, TRUE);
         printf("row: %i count: %i pos: %i\n", rd->currentRow, td->rowCount, pos);
+    break;
+    case SB_LINEDOWN:
+        // TODO
+    case SB_LINEUP:
+    case SB_PAGEUP:
+    case SB_PAGEDOWN:
+        break;
+    }
+
+    RECT rc;
+    // TODO
+    GetWindowRect(hWnd, &rc);
+    rc.right = rc.right - rc.left;
+    rc.left = 0;
+    rc.bottom = rc.bottom - rc.top;
+    rc.top = 0;
+    InvalidateRect(hWnd, &rc, TRUE);
+}
+
+void WMHScroll( HWND hWnd, WPARAM wParam,
+                TextData *td, RenderData *rd )
+{
+    int pos = HIWORD(wParam);
+    int minScroll, maxScroll;
+
+    switch (LOWORD(wParam))
+    {
+    case SB_THUMBTRACK:
+        GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
+        rd->currentColumn = (float)(pos - minScroll) / (maxScroll - minScroll) * (td->longestStringLen - rd->symsPerW);
+        SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
+        printf("col: %i pos: %i len %i\n", rd->currentColumn, pos, td->longestStringLen);
     break;
     case SB_LINEDOWN:
     case SB_LINEUP:
@@ -151,6 +194,7 @@ void WMVScroll( HWND hWnd, WPARAM wParam,
     rc.top = 0;
     InvalidateRect(hWnd, &rc, TRUE);
 }
+
 
 /*  This function is called by the Windows function DispatchMessage()  */
 
@@ -197,6 +241,7 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
             WMVScroll(hWnd, wParam, &td, &rd);
             break;
         case WM_HSCROLL:
+            WMHScroll(hWnd, wParam, &td, &rd);
             break;
         default:                      /* for messages that we don't deal with */
             return DefWindowProc(hWnd, message, wParam, lParam);

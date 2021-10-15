@@ -16,10 +16,11 @@ typedef struct tagRenderData
 
 typedef struct tagTextData
 {
-    char *buf;          /* Text itself as string array */
-    int *offsets;       /* String offsets */
-    int rowCount;       /* Count of rows in text ?? */
-    int bufLen;         /* Buffer size */
+    char *buf;            /* Text itself as string array */
+    int *offsets;         /* String offsets */
+    int rowCount;         /* Count of rows in text ?? */
+    int longestStringLen; /* The longest string length */
+    int bufLen;           /* Buffer size */
 } TextData;
 
 BOOL readFile( char *fileName, TextData *td );

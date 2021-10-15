@@ -7,7 +7,9 @@ BOOL splitTextIntoStrings( TextData *td )
     td->rowCount = 0;
 
     for (i = 0; i < td->bufLen; i++)
-        if (td->buf[i] == '\n' || i == td->bufLen - 1)
+        if (td->buf[i] == '\n')
+            td->rowCount++;
+        else if (i == td->bufLen - 1)
             td->rowCount++;
 
     td->offsets = malloc(sizeof(int) * (td->rowCount + 1));
@@ -16,11 +18,21 @@ BOOL splitTextIntoStrings( TextData *td )
         return FALSE;
 
     td->offsets[curStr++] = 0;
+    td->longestStringLen = 0;
     for (i = 0; i < td->bufLen; i++)
         if (td->buf[i] == '\n')
+        {
             td->offsets[curStr++] = i + 1;
+            td->longestStringLen =
+              max(td->longestStringLen, td->offsets[curStr - 1] - td->offsets[curStr - 2]);
+        }
 
     td->offsets[curStr++] = td->bufLen;
+    // TODO
+    /*
+    td->longestStringLen =
+            max(td->longestStringLen, td->offsets[curStr - 1] - td->offsets[curStr - 2]);
+            */
 
     return TRUE;
 }
