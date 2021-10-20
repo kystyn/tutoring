@@ -20,6 +20,7 @@ typedef struct tagTextData
     int *offsets;         /* String offsets */
     int rowCount;         /* Count of rows in text ?? */
     int longestStringLen; /* The longest string length */
+    int longestStringIdx; /* Number of the longest string */
     int bufLen;           /* Buffer size */
 } TextData;
 

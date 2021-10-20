@@ -60,6 +60,23 @@ BOOL initWindow(HINSTANCE hThisInstance,
     return TRUE;
 }
 
+int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd, int y )
+{
+    char *str = td->buf + td->offsets[y] + rd->currentColumn;
+    int strLen = td->offsets[y + 1] - td->offsets[y] - 1 - rd->currentColumn;
+
+    if (y == td->longestStringIdx)
+        printf("strlen longest %i\n", strLen);
+
+    if (strLen <= 0)
+        return 0;
+
+    int actualLen;
+    SIZE size;
+    GetTextExtentExPoint(hDC, (LPCSTR)str, strLen, rd->screenWidth, &actualLen, NULL, &size);
+    return actualLen;
+}
+
 void WMPaint( HWND hWnd, TextData *td, RenderData *rd )
 {
     int y;
@@ -67,10 +84,11 @@ void WMPaint( HWND hWnd, TextData *td, RenderData *rd )
 
     BeginPaint(hWnd, &ps);
 
+
     for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
         TextOut(ps.hdc, 0, (y - rd->currentRow) * rd->textHeight,
                 td->buf + td->offsets[y] + rd->currentColumn,
-                max(0, td->offsets[y + 1] - td->offsets[y] - 1 - rd->currentColumn));
+                evalSymsPerW(ps.hdc, td, rd, y)); // TODO monospace font
 
     EndPaint(hWnd, &ps);
 }
@@ -79,7 +97,6 @@ void WMSize( HWND hWnd, RenderData *rd, TEXTMETRIC *tm, int newW, int newH )
 {
     RECT rc;
 
-    rd->symsPerW = newW / tm->tmAveCharWidth;
     rd->symsPerH = newH / tm->tmHeight;
     rd->screenWidth = newW;
     rd->screenHeight = newH;
@@ -92,35 +109,69 @@ void WMSize( HWND hWnd, RenderData *rd, TEXTMETRIC *tm, int newW, int newH )
     InvalidateRect(hWnd, &rc, TRUE);
 }
 
+void textRight( HWND hWnd, TextData *td, RenderData *rd )
+{
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
+    rd->currentColumn = min(rd->currentColumn + 1, td->longestStringLen - rd->symsPerW);
+    pos = (float)rd->currentColumn / (td->longestStringLen - rd->symsPerW) * (maxScroll - minScroll) + minScroll;
+    SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
+}
+
+void textLeft( HWND hWnd, TextData *td, RenderData *rd )
+{
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
+    rd->currentColumn = max(rd->currentColumn - 1, 0);
+    pos = (float)rd->currentColumn / (td->longestStringLen - rd->symsPerW) * (maxScroll - minScroll) + minScroll;
+    SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
+}
+
+void textUp( HWND hWnd, TextData *td, RenderData *rd )
+{
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
+    rd->currentRow = max(rd->currentRow - 1, 0);
+    pos = (float)rd->currentRow / (td->rowCount - rd->symsPerH) * (maxScroll - minScroll) + minScroll;
+    SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+}
+
+void textDown( HWND hWnd, TextData *td, RenderData *rd )
+{
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
+    rd->currentRow = min(rd->currentRow + 1, td->rowCount - rd->symsPerH);
+    pos = (float)rd->currentRow / (td->rowCount - rd->symsPerH) * (maxScroll - minScroll) + minScroll;
+    SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+}
+
 void WMKeyDown( HWND hWnd, WPARAM wParam,
                 TextData *td, RenderData *rd )
 {
     RECT rc;
-    int pos;
-    int minscroll, maxscroll;
     //GetScrollRange()
 
     switch (wParam)
     {
     case VK_RIGHT:
-        rd->currentColumn = rd->currentColumn + 1;
-        pos = 0;
-        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+        textRight(hWnd, td, rd);
         break;
     case VK_LEFT:
-        rd->currentColumn = max(rd->currentColumn - 1, 0);
-        pos = 0;
-        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+        textLeft(hWnd, td, rd);
         break;
     case VK_UP:
-        rd->currentRow = max(rd->currentRow - 1, 0);
-        pos = 0;
-        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+        textUp(hWnd, td, rd);
         break;
     case VK_DOWN:
-        rd->currentRow = min(rd->currentRow + 1, td->rowCount - rd->symsPerH);
-        pos = 0;
-        SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+        textDown(hWnd, td, rd);
         break;
     }
 
@@ -145,10 +196,13 @@ void WMVScroll( HWND hWnd, WPARAM wParam,
         rd->currentRow = (float)(pos - minScroll) / (maxScroll - minScroll) * (td->rowCount - rd->symsPerH);
         SetScrollPos(hWnd, SB_VERT, pos, TRUE);
         printf("row: %i count: %i pos: %i\n", rd->currentRow, td->rowCount, pos);
-    break;
+        break;
     case SB_LINEDOWN:
-        // TODO
+        textDown(hWnd, td, rd);
+        break;
     case SB_LINEUP:
+        textUp(hWnd, td, rd);
+        break;
     case SB_PAGEUP:
     case SB_PAGEDOWN:
         break;
@@ -174,12 +228,18 @@ void WMHScroll( HWND hWnd, WPARAM wParam,
     {
     case SB_THUMBTRACK:
         GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
+        rd->symsPerW = evalSymsPerW(GetDC(hWnd), td, rd, td->longestStringIdx);
+        printf("syms per w: %i\n", rd->symsPerW);
         rd->currentColumn = (float)(pos - minScroll) / (maxScroll - minScroll) * (td->longestStringLen - rd->symsPerW);
         SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
         printf("col: %i pos: %i len %i\n", rd->currentColumn, pos, td->longestStringLen);
     break;
     case SB_LINEDOWN:
+        textRight(hWnd, td, rd);
+        break;
     case SB_LINEUP:
+        textLeft(hWnd, td, rd);
+        break;
     case SB_PAGEUP:
     case SB_PAGEDOWN:
         break;
@@ -221,6 +281,8 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
             rc = readFile((char *)file_name, &td);
             if (!rc)
                 MessageBox(hWnd, "Couldn't read a file", "Error", 0);
+
+            rd.symsPerW = evalSymsPerW(GetDC(hWnd), &td, &rd, td.longestStringIdx);
 
             ShowScrollBar(hWnd, SB_HORZ, TRUE);
             SetScrollRange(hWnd, SB_HORZ, 0, 1000, TRUE);
