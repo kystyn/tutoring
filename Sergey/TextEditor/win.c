@@ -88,7 +88,7 @@ void WMPaint( HWND hWnd, TextData *td, RenderData *rd )
     for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
         TextOut(ps.hdc, 0, (y - rd->currentRow) * rd->textHeight,
                 td->buf + td->offsets[y] + rd->currentColumn,
-                evalSymsPerW(ps.hdc, td, rd, y) - 1); // TODO monospace font
+                evalSymsPerW(ps.hdc, td, rd, y)); // TODO monospace font
 
     EndPaint(hWnd, &ps);
 }
@@ -115,7 +115,7 @@ int calcVScrollPos( TextData *td, RenderData *rd, int minScroll, int maxScroll )
 {
     return (float)rd->currentRow /
             (td->rowCount - rd->symsPerH) *
-            (maxScroll - minScroll) + minScroll
+            (maxScroll - minScroll) + minScroll;
 
 }
 
@@ -134,7 +134,7 @@ void textRight( HWND hWnd, TextData *td, RenderData *rd )
 
     GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
     rd->currentColumn = max(0, min(rd->currentColumn + 1, td->longestStringLen - rd->symsPerW));
-    pos = max(0, (float)rd->currentColumn / (td->longestStringLen - rd->symsPerW) * (maxScroll - minScroll)) + minScroll;
+    pos = calcHScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
 }
 
@@ -145,7 +145,7 @@ void textLeft( HWND hWnd, TextData *td, RenderData *rd )
 
     GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
     rd->currentColumn = max(rd->currentColumn - 1, 0);
-    pos = max(0, (float)rd->currentColumn / (td->longestStringLen - rd->symsPerW) * (maxScroll - minScroll)) + minScroll;
+    pos = calcHScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
 }
 
@@ -156,7 +156,7 @@ void textUp( HWND hWnd, TextData *td, RenderData *rd )
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
     rd->currentRow = max(rd->currentRow - 1, 0);
-    pos = (float)rd->currentRow / (td->rowCount - rd->symsPerH) * (maxScroll - minScroll) + minScroll;
+    pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
 }
 
@@ -167,7 +167,7 @@ void textDown( HWND hWnd, TextData *td, RenderData *rd )
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
     rd->currentRow = max(0, min(rd->currentRow + 1, td->rowCount - rd->symsPerH));
-    pos = (float)rd->currentRow / (td->rowCount - rd->symsPerH) * (maxScroll - minScroll) + minScroll;
+    pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
 }
 
@@ -177,7 +177,7 @@ void textPgUp(HWND hWnd, TextData *td, RenderData *rd){
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
     rd->currentRow = max(rd->currentRow - rd->symsPerH, 0);
-    pos = (float)rd->currentRow / (td->rowCount - rd->symsPerH) * (maxScroll - minScroll) + minScroll;
+    pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
 }
 
@@ -187,7 +187,7 @@ void textPgDown(HWND hWnd, TextData *td, RenderData *rd){
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
     rd->currentRow = max(0, min(rd->currentRow + rd->symsPerH, td->rowCount - rd->symsPerH));
-    pos = (float)rd->currentRow / (td->rowCount - rd->symsPerH) * (maxScroll - minScroll) + minScroll;
+    pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
 }
 
@@ -238,6 +238,7 @@ void WMVScroll( HWND hWnd, WPARAM wParam,
     case SB_THUMBTRACK:
         GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
         rd->currentRow = max(0, (float)(pos - minScroll) / (maxScroll - minScroll) * (td->rowCount - rd->symsPerH));
+        pos = calcVScrollPos(td, rd, minScroll, maxScroll);
         SetScrollPos(hWnd, SB_VERT, pos, TRUE);
         printf("row: %i count: %i pos: %i\n", rd->currentRow, td->rowCount, pos);
         break;
@@ -278,6 +279,7 @@ void WMHScroll( HWND hWnd, WPARAM wParam,
         rd->symsPerW = evalSymsPerW(GetDC(hWnd), td, rd, td->longestStringIdx);
         printf("syms per w: %i\n", rd->symsPerW);
         rd->currentColumn = max(0, (float)(pos - minScroll) / (maxScroll - minScroll) * (td->longestStringLen - rd->symsPerW));
+        pos = calcHScrollPos(td, rd, minScroll, maxScroll);
         SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
         printf("col: %i pos: %i len %i\n", rd->currentColumn, pos, td->longestStringLen);
     break;
