@@ -70,3 +70,139 @@ BOOL readFile( char *fileName, TextData *td )
 
     return TRUE;
 }
+
+void textRight( HWND hWnd, TextData *td, RenderData *rd )
+{
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
+    rd->currentColumn = max(0, min(rd->currentColumn + 1, td->longestStringLen - rd->symsPerW));
+    pos = calcHScrollPos(td, rd, minScroll, maxScroll);
+    SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
+}
+
+void textLeft( HWND hWnd, TextData *td, RenderData *rd )
+{
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
+    rd->currentColumn = max(rd->currentColumn - 1, 0);
+    pos = calcHScrollPos(td, rd, minScroll, maxScroll);
+    SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
+}
+
+void textUp( HWND hWnd, TextData *td, RenderData *rd )
+{
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
+    rd->currentRow = max(rd->currentRow - 1, 0);
+    pos = calcVScrollPos(td, rd, minScroll, maxScroll);
+    SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+}
+
+void textDown( HWND hWnd, TextData *td, RenderData *rd )
+{
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
+    rd->currentRow = max(0, min(rd->currentRow + 1, td->rowCount - rd->symsPerH));
+    pos = calcVScrollPos(td, rd, minScroll, maxScroll);
+    SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+}
+
+void textPgUp(HWND hWnd, TextData *td, RenderData *rd){
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
+    rd->currentRow = max(rd->currentRow - rd->symsPerH, 0);
+    pos = calcVScrollPos(td, rd, minScroll, maxScroll);
+    SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+}
+
+void textPgDown(HWND hWnd, TextData *td, RenderData *rd){
+    int pos;
+    int minScroll, maxScroll;
+
+    GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
+    rd->currentRow = max(0, min(rd->currentRow + rd->symsPerH, td->rowCount - rd->symsPerH));
+    pos = calcVScrollPos(td, rd, minScroll, maxScroll);
+    SetScrollPos(hWnd, SB_VERT, pos, TRUE);
+}
+
+int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd, int y, int substrOffset )
+{
+    char *str = td->buf + td->offsets[y] + rd->currentColumn + substrOffset;
+    int strLen = td->offsets[y + 1] - td->offsets[y] - 1 - rd->currentColumn - substrOffset;
+
+    if (y == td->longestStringIdx)
+        printf("strlen longest %i\n", strLen);
+
+    if (strLen <= 0)
+        return strLen;
+
+    int actualLen;
+    SIZE size;
+    GetTextExtentExPoint(hDC, (LPCSTR)str, strLen + 1, rd->screenWidth, &actualLen, NULL, &size);
+    return actualLen;
+}
+
+int calcVScrollPos( TextData *td, RenderData *rd, int minScroll, int maxScroll )
+{
+    return (float)rd->currentRow /
+            (td->rowCount - rd->symsPerH) *
+            (maxScroll - minScroll) + minScroll;
+
+}
+
+int calcHScrollPos( TextData *td, RenderData *rd, int minScroll, int maxScroll )
+{
+    return max(0, (float)rd->currentColumn /
+               (td->longestStringLen - rd->symsPerW) *
+               (maxScroll - minScroll)) + minScroll;
+}
+
+BOOL evalSubstrOffsets( HDC hDC, TextData *td, RenderData *rd )
+{
+    int rowNum;
+
+    td->substrOffsets = malloc(sizeof(int *) * td->rowCount);
+
+    if (td->substrOffsets == NULL)
+        return FALSE;
+
+    for (rowNum = 0; rowNum < td->rowCount; rowNum++)
+    {
+        int substrCounter = 0;
+        int curSubstrPos, curSubstrNum;
+
+        int substrLen;
+        for (curSubstrPos = 0;
+              curSubstrPos < td->offsets[rowNum + 1] - td->offsets[rowNum] - 1;
+              curSubstrPos += substrLen, substrCounter++)
+            substrLen = evalSymsPerW(hDC, td, rd, rowNum, curSubstrPos);
+
+        td->substrOffsets[rowNum] = malloc(sizeof(int) * substrCounter);
+
+        if (td->substrOffsets[rowNum] == NULL)
+        {
+            int i;
+            for (i = 0; i < rowNum; i++)
+                free(td->substrOffsets[i]);
+            free(td->substrOffsets);
+            return FALSE;
+        }
+
+        for (curSubstrNum = 0; curSubstrNum < substrCounter; curSubstrNum++)
+        {
+            substrLen = evalSymsPerW(hDC, td, rd, rowNum, curSubstrPos);
+            td->substrOffsets[rowNum][curSubstrNum] = substrLen;
+        }
+    }
+    return TRUE;
+}
