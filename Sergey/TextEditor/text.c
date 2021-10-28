@@ -23,10 +23,10 @@ BOOL splitTextIntoStrings( TextData *td )
         if (td->buf[i] == '\n')
         {
             td->offsets[curStr++] = i + 1;
-            if (td->longestStringLen < td->offsets[curStr - 1] - td->offsets[curStr - 2])
+            if (td->longestStringLen < td->offsets[curStr - 1] - td->offsets[curStr - 2] - 1)
             {
                 td->longestStringIdx = curStr - 2;
-                td->longestStringLen = td->offsets[curStr - 1] - td->offsets[curStr - 2];
+                td->longestStringLen = td->offsets[curStr - 1] - td->offsets[curStr - 2] - 1;
             }
         }
 
@@ -34,7 +34,7 @@ BOOL splitTextIntoStrings( TextData *td )
     // TODO
     /*
     td->longestStringLen =
-            max(td->longestStringLen, td->offsets[curStr - 1] - td->offsets[curStr - 2]);
+            max(td->longestStringLen, td->offsets[curStr - 1] - td->offsets[curStr - 2] - 1);
             */
 
     return TRUE;
