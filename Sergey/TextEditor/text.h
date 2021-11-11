@@ -6,6 +6,7 @@
 typedef struct tagRenderData
 {
     int currentRow;     /* Current upper row */
+    int currentSubstring;
     int currentColumn;  /* Current leftist symbol */
     int symsPerW;       /* Symbols count per screen width */
     int symsPerH;       /* Symbols count per screen height */
@@ -19,6 +20,7 @@ typedef struct tagTextData
     char *buf;            /* Text itself as string array */
     int *offsets;         /* String offsets */
     int **substrOffsets;  /* Array of offsets for each string. Layout mode only */
+    int *substrCount;     /* Index of array is row number, value is count of substrings. Layout mode only */
     int rowCount;         /* Count of rows in text ?? */
     int longestStringLen; /* The longest string length */
     int longestStringIdx; /* Number of the longest string */

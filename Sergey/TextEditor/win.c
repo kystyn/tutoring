@@ -62,7 +62,7 @@ BOOL initWindow(HINSTANCE hThisInstance,
 
 void WMPaint( HWND hWnd, TextData *td, RenderData *rd, Mode mode )
 {
-    int y;
+    int y, sy;
     PAINTSTRUCT ps;
 
     BeginPaint(hWnd, &ps);
@@ -75,7 +75,12 @@ void WMPaint( HWND hWnd, TextData *td, RenderData *rd, Mode mode )
                     evalSymsPerW(ps.hdc, td, rd, y, 0));
     else
     {
-        // TODO
+        int strNum = 0;
+        for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
+            for (sy = rd->currentSubstring; sy < td->substrCount[y]; sy++, strNum++)
+                TextOut(ps.hdc, 0, strNum * rd->textHeight,
+                    td->buf + td->offsets[y] + td->substrOffsets[y][sy],
+                    evalSymsPerW(ps.hdc, td, rd, y, td->substrOffsets[y][sy]));
     }
 
     EndPaint(hWnd, &ps);

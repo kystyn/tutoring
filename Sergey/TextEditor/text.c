@@ -17,6 +17,16 @@ BOOL splitTextIntoStrings( TextData *td )
     if (td->offsets == NULL)
         return FALSE;
 
+    td->substrOffsets = malloc(sizeof(int *) * td->rowCount);
+    if (td->substrOffsets == NULL)
+        return FALSE;
+
+    memset(td->substrOffsets, 0, sizeof(int *) * td->rowCount);
+
+    td->substrCount = malloc(sizeof(int) * td->rowCount);
+    if (td->substrCount == NULL)
+        return FALSE;
+
     td->offsets[curStr++] = 0;
     td->longestStringLen = 0;
     for (i = 0; i < td->bufLen; i++)
@@ -146,9 +156,13 @@ int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd, int y, int substrOffset
     if (strLen <= 0)
         return strLen;
 
-    int actualLen;
+    int actualLen = min(60, strLen);
+
+    /*HFONT hFont = GetStockObject(DEVICE_DEFAULT_FONT);
+    SelectObject(hDC, hFont);
     SIZE size;
     GetTextExtentExPoint(hDC, (LPCSTR)str, strLen + 1, rd->screenWidth, &actualLen, NULL, &size);
+    DeleteObject(hFont);*/
     return actualLen;
 }
 
@@ -171,21 +185,23 @@ BOOL evalSubstrOffsets( HDC hDC, TextData *td, RenderData *rd )
 {
     int rowNum;
 
-    td->substrOffsets = malloc(sizeof(int *) * td->rowCount);
-
-    if (td->substrOffsets == NULL)
-        return FALSE;
-
     for (rowNum = 0; rowNum < td->rowCount; rowNum++)
     {
         int substrCounter = 0;
         int curSubstrPos, curSubstrNum;
 
+        /* Calc count of substrings of current string */
         int substrLen;
         for (curSubstrPos = 0;
               curSubstrPos < td->offsets[rowNum + 1] - td->offsets[rowNum] - 1;
               curSubstrPos += substrLen, substrCounter++)
             substrLen = evalSymsPerW(hDC, td, rd, rowNum, curSubstrPos);
+
+        substrCounter = max(substrCounter, 1);
+        td->substrCount[rowNum] = substrCounter;
+
+        if (td->substrOffsets[rowNum] != NULL)
+            free(td->substrOffsets[rowNum]);
 
         td->substrOffsets[rowNum] = malloc(sizeof(int) * substrCounter);
 
@@ -198,10 +214,12 @@ BOOL evalSubstrOffsets( HDC hDC, TextData *td, RenderData *rd )
             return FALSE;
         }
 
-        for (curSubstrNum = 0; curSubstrNum < substrCounter; curSubstrNum++)
+        for (curSubstrNum = 0, curSubstrPos = 0;
+             curSubstrNum < substrCounter;
+             curSubstrNum++, curSubstrPos += substrLen)
         {
             substrLen = evalSymsPerW(hDC, td, rd, rowNum, curSubstrPos);
-            td->substrOffsets[rowNum][curSubstrNum] = substrLen;
+            td->substrOffsets[rowNum][curSubstrNum] = curSubstrPos;
         }
     }
     return TRUE;
