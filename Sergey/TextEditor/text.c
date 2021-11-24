@@ -77,6 +77,20 @@ BOOL readFile( char *fileName, TextData *td )
     return TRUE;
 }
 
+void evalLastStringNumber( TextData *td, RenderData *rd,
+                           int *lastRow, int *lastSubstring )
+{
+    int
+        rowCounter;
+    *lastRow = td->rowCount - 1,
+    *lastSubstring = td->substrCount[td->rowCount - 1] - 1;
+
+    for (rowCounter = 0; rowCounter < rd->symsPerH; rowCounter += td->substrCount[*lastRow])
+        (*lastRow)--;
+
+    *lastSubstring = td->substrCount[*lastRow] - (rowCounter - rd->symsPerH);
+}
+
 void textRight( HWND hWnd, TextData *td, RenderData *rd )
 {
     int pos;
@@ -138,7 +152,10 @@ void textDown( HWND hWnd, TextData *td, RenderData *rd, Mode mode )
             rd->currentSubstring++;
         else
         {
-            rd->currentRow = max(0, min(rd->currentRow + 1, td->rowCount - rd->symsPerH));
+            int lastRow, lastSubstring;
+            evalLastStringNumber(td, rd, &lastRow, &lastSubstring);
+            // TODO check
+            rd->currentRow = max(rd->currentRow + 1, lastRow);
             rd->currentSubstring = 0;
         }
     }
@@ -152,9 +169,28 @@ void textPgUp(HWND hWnd, TextData *td, RenderData *rd, Mode mode)
     int minScroll, maxScroll;
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
-    rd->currentRow = max(rd->currentRow - rd->symsPerH, 0);
-    if (mode == LAYOUT)
-        rd->currentSubstring = 0;
+    if (mode == VIEW)
+        rd->currentRow = max(rd->currentRow - rd->symsPerH, 0);
+    else
+    {
+        int screenRowCounter = rd->currentSubstring;
+
+        if (screenRowCounter >= rd->symsPerH)
+            rd->currentSubstring -= rd->symsPerH;
+        else
+        {
+            for (rd->currentRow = max(rd->currentRow - 1, 0); ; rd->currentRow--)
+            {
+                screenRowCounter += td->substrCount[rd->currentRow];
+                if (rd->currentRow == 0)
+                    break;
+                if (screenRowCounter >= rd->symsPerH)
+                    break;
+            }
+
+            rd->currentSubstring = max(0, screenRowCounter - rd->symsPerH);
+        }
+    }
 
     pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
@@ -167,9 +203,36 @@ void textPgDown(HWND hWnd, TextData *td, RenderData *rd, Mode mode)
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
 
-    rd->currentRow = max(0, min(rd->currentRow + rd->symsPerH, td->rowCount - rd->symsPerH));
-    if (mode == LAYOUT)
-        rd->currentSubstring = 0;
+    if (mode == VIEW)
+        rd->currentRow = max(0, min(rd->currentRow + rd->symsPerH, td->rowCount - rd->symsPerH));
+    else
+    {
+        int screenRowCounter = td->substrCount[rd->currentRow] - rd->currentSubstring;
+
+        if (screenRowCounter >= rd->symsPerH)
+            rd->currentSubstring += rd->symsPerH;
+        else
+        {
+            int lastRow, lastSubstring;
+            /* Evaluate number of last row and substring */
+            evalLastStringNumber(td, rd, &lastRow, &lastSubstring);
+            /* Directly evaluate current row and substring */
+            for (rd->currentRow = min(rd->currentRow + 1, lastRow); ; rd->currentRow++)
+            {
+                screenRowCounter += td->substrCount[rd->currentRow];
+
+                if (rd->currentRow == lastRow)
+                    break;
+                if (screenRowCounter >= rd->symsPerH)
+                    break;
+            }
+
+            if (rd->currentRow != lastRow)
+                rd->currentSubstring = td->substrCount[rd->currentRow] - (screenRowCounter - rd->symsPerH);
+            else
+                rd->currentSubstring = lastSubstring;
+        }
+    }
 
     pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);

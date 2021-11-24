@@ -99,13 +99,13 @@ void WMSize( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm, int newW, 
 
     rc.top = 0;
     rc.left = 0;
-    // TODO maybe pass width and height of screen received in WM_SIZE message
     rc.bottom = rd->screenHeight;
     rc.right = rd->screenWidth;
     InvalidateRect(hWnd, &rc, TRUE);
 
     rd->screenWidth = newW;
     rd->screenHeight = newH;
+    // TODO evalSymsPerW
     rd->symsPerW = newW / tm->tmAveCharWidth;// evalSymsPerW(GetDC(hWnd), td, rd);
     rd->symsPerH = newH / tm->tmHeight;
 
@@ -216,7 +216,6 @@ void WMHScroll( HWND hWnd, WPARAM wParam,
     }
 
     RECT rc;
-    // TODO
     GetWindowRect(hWnd, &rc);
     rc.right = rc.right - rc.left;
     rc.left = 0;
@@ -225,6 +224,11 @@ void WMHScroll( HWND hWnd, WPARAM wParam,
     InvalidateRect(hWnd, &rc, TRUE);
 }
 
+void saveFree( void *ptr )
+{
+    if (ptr != NULL)
+        free(ptr);
+}
 
 /*  This function is called by the Windows function DispatchMessage()  */
 
@@ -237,13 +241,17 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
     static HDC hDC;
     static HFONT hFont;
     static TEXTMETRIC tm;
-    static Mode mode = VIEW; //LAYOUT;
+    static Mode mode = LAYOUT; //VIEW;
     static int fontSize = 14;
     int rc;
 
     switch (message)                  /* handle the messages */
     {
         case WM_DESTROY:
+            saveFree(td.buf);
+            saveFree(td.offsets);
+            saveFree(td.substrCount);
+            memset(&td, 0, sizeof(td));
             DeleteObject(hFont);
             PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
             break;
@@ -300,7 +308,6 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
             break;
         default:                      /* for messages that we don't deal with */
             return DefWindowProc(hWnd, message, wParam, lParam);
-        // TODO WM_CLOSE and free all data
     }
 
     return 0;
