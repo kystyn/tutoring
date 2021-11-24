@@ -60,27 +60,34 @@ BOOL initWindow(HINSTANCE hThisInstance,
     return TRUE;
 }
 
-void WMPaint( HWND hWnd, TextData *td, RenderData *rd, Mode mode )
+void WMPaint( HWND hWnd, TextData *td, RenderData *rd,
+             HFONT hFont, Mode mode )
 {
     int y, sy;
     PAINTSTRUCT ps;
 
-    BeginPaint(hWnd, &ps);
+    HDC hDC = BeginPaint(hWnd, &ps);
+
+    SelectObject(hDC, hFont);
+    SetTextColor(hDC, RGB(255, 0, 0));
 
 
     if (mode == VIEW)
         for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
             TextOut(ps.hdc, 0, (y - rd->currentRow) * rd->textHeight,
                     td->buf + td->offsets[y] + rd->currentColumn,
-                    evalSymsPerW(ps.hdc, td, rd, y, 0));
+                    min(rd->symsPerW,
+                        td->offsets[y + 1] - (td->offsets[y] + rd->currentColumn)));
     else
     {
         int strNum = 0;
-        for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
-            for (sy = rd->currentSubstring; sy < td->substrCount[y]; sy++, strNum++)
+        for (y = rd->currentRow;
+            strNum < rd->symsPerH && y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
+            for (sy = y == rd->currentRow ? rd->currentSubstring : 0; sy < td->substrCount[y]; sy++, strNum++)
                 TextOut(ps.hdc, 0, strNum * rd->textHeight,
-                    td->buf + td->offsets[y] + td->substrOffsets[y][sy],
-                    evalSymsPerW(ps.hdc, td, rd, y, td->substrOffsets[y][sy]));
+                    td->buf + td->offsets[y] + sy * rd->symsPerW,
+                    min(rd->symsPerW,
+                        td->offsets[y + 1] - (td->offsets[y] + sy * rd->symsPerW)));
     }
 
     EndPaint(hWnd, &ps);
@@ -90,12 +97,6 @@ void WMSize( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm, int newW, 
 {
     RECT rc;
 
-    rd->symsPerH = newH / tm->tmHeight;
-    rd->screenWidth = newW;
-    rd->screenHeight = newH;
-
-    rd->symsPerW = evalSymsPerW(GetDC(hWnd), td, rd, td->longestStringIdx, 0);
-
     rc.top = 0;
     rc.left = 0;
     // TODO maybe pass width and height of screen received in WM_SIZE message
@@ -103,12 +104,17 @@ void WMSize( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm, int newW, 
     rc.right = rd->screenWidth;
     InvalidateRect(hWnd, &rc, TRUE);
 
+    rd->screenWidth = newW;
+    rd->screenHeight = newH;
+    rd->symsPerW = newW / tm->tmAveCharWidth;// evalSymsPerW(GetDC(hWnd), td, rd);
+    rd->symsPerH = newH / tm->tmHeight;
+
     if (mode == LAYOUT)
-        evalSubstrOffsets(GetDC(hWnd), td, rd);
+        evalSubstrCount(GetDC(hWnd), td, rd);
 }
 
 void WMKeyDown( HWND hWnd, WPARAM wParam,
-                TextData *td, RenderData *rd )
+                TextData *td, RenderData *rd, Mode mode )
 {
     RECT rc;
     //GetScrollRange()
@@ -122,16 +128,16 @@ void WMKeyDown( HWND hWnd, WPARAM wParam,
         textLeft(hWnd, td, rd);
         break;
     case VK_UP:
-        textUp(hWnd, td, rd);
+        textUp(hWnd, td, rd, mode);
         break;
     case VK_DOWN:
-        textDown(hWnd, td, rd);
+        textDown(hWnd, td, rd, mode);
         break;
     case VK_PRIOR:
-        textPgUp(hWnd, td, rd);
+        textPgUp(hWnd, td, rd, mode);
         break;
     case VK_NEXT:
-        textPgDown(hWnd, td, rd);
+        textPgDown(hWnd, td, rd, mode);
         break;
     }
 
@@ -144,7 +150,7 @@ void WMKeyDown( HWND hWnd, WPARAM wParam,
 }
 
 void WMVScroll( HWND hWnd, WPARAM wParam,
-                TextData *td, RenderData *rd )
+                TextData *td, RenderData *rd, Mode mode )
 {
     int pos = HIWORD(wParam);
     int minScroll, maxScroll;
@@ -159,16 +165,16 @@ void WMVScroll( HWND hWnd, WPARAM wParam,
         printf("row: %i count: %i pos: %i\n", rd->currentRow, td->rowCount, pos);
         break;
     case SB_LINEDOWN:
-        textDown(hWnd, td, rd);
+        textDown(hWnd, td, rd, mode);
         break;
     case SB_LINEUP:
-        textUp(hWnd, td, rd);
+        textUp(hWnd, td, rd, mode);
         break;
     case SB_PAGEUP:
-        textPgUp(hWnd, td, rd);
+        textPgUp(hWnd, td, rd, mode);
         break;
     case SB_PAGEDOWN:
-        textPgDown(hWnd, td, rd);
+        textPgDown(hWnd, td, rd, mode);
         break;
     }
 
@@ -192,7 +198,6 @@ void WMHScroll( HWND hWnd, WPARAM wParam,
     {
     case SB_THUMBTRACK:
         GetScrollRange(hWnd, SB_HORZ, &minScroll, &maxScroll);
-        rd->symsPerW = evalSymsPerW(GetDC(hWnd), td, rd, td->longestStringIdx, 0);
         printf("syms per w: %i\n", rd->symsPerW);
         rd->currentColumn = max(0, (float)(pos - minScroll) / (maxScroll - minScroll) * (td->longestStringLen - rd->symsPerW));
         pos = calcHScrollPos(td, rd, minScroll, maxScroll);
@@ -230,18 +235,38 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
     static RenderData rd = {0};
 
     static HDC hDC;
+    static HFONT hFont;
     static TEXTMETRIC tm;
-    static Mode mode = LAYOUT;
+    static Mode mode = VIEW; //LAYOUT;
+    static int fontSize = 14;
     int rc;
 
     switch (message)                  /* handle the messages */
     {
         case WM_DESTROY:
+            DeleteObject(hFont);
             PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
             break;
         case WM_CREATE:
-            file_name=(LPSTR)(((CREATESTRUCT*)lParam)->lpCreateParams);  //
+            hFont = CreateFont(
+                     fontSize,
+                     0,
+                     0,
+                     0,
+                     FW_NORMAL,
+                     FALSE,
+                     FALSE,
+                     FALSE,
+                     ANSI_CHARSET,
+                     OUT_TT_PRECIS,
+                     CLIP_CHARACTER_PRECIS,
+                     CLEARTYPE_QUALITY,
+                     FIXED_PITCH,
+                     TEXT("Courier"));
+
+            file_name=(LPSTR)(((CREATESTRUCT*)lParam)->lpCreateParams);
             hDC = GetDC(hWnd);
+            SelectObject(hDC, hFont);
             GetTextMetrics(hDC, &tm);
             rd.textHeight = tm.tmHeight;
             rc = readFile((char *)file_name, &td);
@@ -261,13 +286,13 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
             WMSize(hWnd, &td, &rd, &tm, LOWORD(lParam), HIWORD(lParam), mode);
             break;
         case WM_PAINT:
-            WMPaint(hWnd, &td, &rd, mode);
+            WMPaint(hWnd, &td, &rd, hFont, mode);
             break;
         case WM_KEYDOWN:
-            WMKeyDown(hWnd, wParam, &td, &rd);
+            WMKeyDown(hWnd, wParam, &td, &rd, mode);
             break;
         case WM_VSCROLL:
-            WMVScroll(hWnd, wParam, &td, &rd);
+            WMVScroll(hWnd, wParam, &td, &rd, mode);
             break;
         case WM_HSCROLL:
             if (mode == VIEW)

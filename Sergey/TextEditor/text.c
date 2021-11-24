@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include "text.h"
 
 BOOL splitTextIntoStrings( TextData *td )
@@ -17,15 +18,10 @@ BOOL splitTextIntoStrings( TextData *td )
     if (td->offsets == NULL)
         return FALSE;
 
-    td->substrOffsets = malloc(sizeof(int *) * td->rowCount);
-    if (td->substrOffsets == NULL)
-        return FALSE;
-
-    memset(td->substrOffsets, 0, sizeof(int *) * td->rowCount);
-
     td->substrCount = malloc(sizeof(int) * td->rowCount);
     if (td->substrCount == NULL)
         return FALSE;
+    memset(td->substrCount, 0, sizeof(int) * td->rowCount);
 
     td->offsets[curStr++] = 0;
     td->longestStringLen = 0;
@@ -103,66 +99,92 @@ void textLeft( HWND hWnd, TextData *td, RenderData *rd )
     SetScrollPos(hWnd, SB_HORZ, pos, TRUE);
 }
 
-void textUp( HWND hWnd, TextData *td, RenderData *rd )
+void textUp( HWND hWnd, TextData *td, RenderData *rd, Mode mode )
 {
     int pos;
     int minScroll, maxScroll;
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
-    rd->currentRow = max(rd->currentRow - 1, 0);
+
+    if (mode == VIEW)
+        rd->currentRow = max(rd->currentRow - 1, 0);
+    else
+    {
+        if (rd->currentSubstring != 0)
+            rd->currentSubstring--;
+        else
+        {
+            rd->currentRow = max(rd->currentRow - 1, 0);
+            rd->currentSubstring = td->substrCount[rd->currentRow] - 1;
+        }
+    }
+
+
     pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
 }
 
-void textDown( HWND hWnd, TextData *td, RenderData *rd )
+void textDown( HWND hWnd, TextData *td, RenderData *rd, Mode mode )
 {
     int pos;
     int minScroll, maxScroll;
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
-    rd->currentRow = max(0, min(rd->currentRow + 1, td->rowCount - rd->symsPerH));
+    if (mode == VIEW)
+        rd->currentRow = max(0, min(rd->currentRow + 1, td->rowCount - rd->symsPerH));
+    else
+    {
+        if (rd->currentSubstring != td->substrCount[rd->currentRow] - 1)
+            rd->currentSubstring++;
+        else
+        {
+            rd->currentRow = max(0, min(rd->currentRow + 1, td->rowCount - rd->symsPerH));
+            rd->currentSubstring = 0;
+        }
+    }
     pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
 }
 
-void textPgUp(HWND hWnd, TextData *td, RenderData *rd){
+void textPgUp(HWND hWnd, TextData *td, RenderData *rd, Mode mode)
+{
     int pos;
     int minScroll, maxScroll;
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
     rd->currentRow = max(rd->currentRow - rd->symsPerH, 0);
+    if (mode == LAYOUT)
+        rd->currentSubstring = 0;
+
     pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
 }
 
-void textPgDown(HWND hWnd, TextData *td, RenderData *rd){
+void textPgDown(HWND hWnd, TextData *td, RenderData *rd, Mode mode)
+{
     int pos;
     int minScroll, maxScroll;
 
     GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
+
     rd->currentRow = max(0, min(rd->currentRow + rd->symsPerH, td->rowCount - rd->symsPerH));
+    if (mode == LAYOUT)
+        rd->currentSubstring = 0;
+
     pos = calcVScrollPos(td, rd, minScroll, maxScroll);
     SetScrollPos(hWnd, SB_VERT, pos, TRUE);
 }
 
-int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd, int y, int substrOffset )
+int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd )
 {
-    char *str = td->buf + td->offsets[y] + rd->currentColumn + substrOffset;
-    int strLen = td->offsets[y + 1] - td->offsets[y] - 1 - rd->currentColumn - substrOffset;
+    char *str = td->buf;
+    int strLen = td->longestStringLen;
+    int actualLen;
 
-    if (y == td->longestStringIdx)
-        printf("strlen longest %i\n", strLen);
-
-    if (strLen <= 0)
-        return strLen;
-
-    int actualLen = min(60, strLen);
-
-    /*HFONT hFont = GetStockObject(DEVICE_DEFAULT_FONT);
-    SelectObject(hDC, hFont);
     SIZE size;
-    GetTextExtentExPoint(hDC, (LPCSTR)str, strLen + 1, rd->screenWidth, &actualLen, NULL, &size);
-    DeleteObject(hFont);*/
+    GetTextExtentExPoint(hDC,
+                         (LPCSTR)(str + td->offsets[td->longestStringIdx]),
+                         strLen, rd->screenWidth, &actualLen, NULL, &size);
     return actualLen;
 }
 
@@ -181,46 +203,15 @@ int calcHScrollPos( TextData *td, RenderData *rd, int minScroll, int maxScroll )
                (maxScroll - minScroll)) + minScroll;
 }
 
-BOOL evalSubstrOffsets( HDC hDC, TextData *td, RenderData *rd )
+void evalSubstrCount( HDC hDC, TextData *td, RenderData *rd )
 {
     int rowNum;
 
+    if (rd->symsPerW == 0)
+        return;
+
+    /* Calc count of substrings of current string */
     for (rowNum = 0; rowNum < td->rowCount; rowNum++)
-    {
-        int substrCounter = 0;
-        int curSubstrPos, curSubstrNum;
-
-        /* Calc count of substrings of current string */
-        int substrLen;
-        for (curSubstrPos = 0;
-              curSubstrPos < td->offsets[rowNum + 1] - td->offsets[rowNum] - 1;
-              curSubstrPos += substrLen, substrCounter++)
-            substrLen = evalSymsPerW(hDC, td, rd, rowNum, curSubstrPos);
-
-        substrCounter = max(substrCounter, 1);
-        td->substrCount[rowNum] = substrCounter;
-
-        if (td->substrOffsets[rowNum] != NULL)
-            free(td->substrOffsets[rowNum]);
-
-        td->substrOffsets[rowNum] = malloc(sizeof(int) * substrCounter);
-
-        if (td->substrOffsets[rowNum] == NULL)
-        {
-            int i;
-            for (i = 0; i < rowNum; i++)
-                free(td->substrOffsets[i]);
-            free(td->substrOffsets);
-            return FALSE;
-        }
-
-        for (curSubstrNum = 0, curSubstrPos = 0;
-             curSubstrNum < substrCounter;
-             curSubstrNum++, curSubstrPos += substrLen)
-        {
-            substrLen = evalSymsPerW(hDC, td, rd, rowNum, curSubstrPos);
-            td->substrOffsets[rowNum][curSubstrNum] = curSubstrPos;
-        }
-    }
-    return TRUE;
+        td->substrCount[rowNum] =
+            max(1, ceil((double)(td->offsets[rowNum + 1] - td->offsets[rowNum] - 1) / rd->symsPerW));
 }

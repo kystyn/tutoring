@@ -19,7 +19,6 @@ typedef struct tagTextData
 {
     char *buf;            /* Text itself as string array */
     int *offsets;         /* String offsets */
-    int **substrOffsets;  /* Array of offsets for each string. Layout mode only */
     int *substrCount;     /* Index of array is row number, value is count of substrings. Layout mode only */
     int rowCount;         /* Count of rows in text ?? */
     int longestStringLen; /* The longest string length */
@@ -37,9 +36,9 @@ BOOL readFile( char *fileName, TextData *td );
 /* maybe in win.h*/
 int calcSymbolsPerScreen( int width, int height, TEXTMETRIC *tm, RenderData *rd );
 
-int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd, int y, int substrOffset );
+int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd );
 
-BOOL evalSubstrOffsets( HDC hDC, TextData *td, RenderData *rd );
+void evalSubstrCount( HDC hDC, TextData *td, RenderData *rd );
 
 int calcVScrollPos( TextData *td, RenderData *rd, int minScroll, int maxScroll );
 int calcHScrollPos( TextData *td, RenderData *rd, int minScroll, int maxScroll );
@@ -47,11 +46,11 @@ int calcHScrollPos( TextData *td, RenderData *rd, int minScroll, int maxScroll )
 
 void textLeft( HWND hWnd, TextData *td, RenderData *rd );
 void textRight( HWND hWnd, TextData *td, RenderData *rd );
-void textDown( HWND hWnd, TextData *td, RenderData *rd );
-void textUp( HWND hWnd, TextData *td, RenderData *rd );
+void textDown( HWND hWnd, TextData *td, RenderData *rd, Mode mode );
+void textUp( HWND hWnd, TextData *td, RenderData *rd, Mode mode );
 
-void textPgUp(HWND hWnd, TextData *td, RenderData *rd);
-void textPgDown(HWND hWnd, TextData *td, RenderData *rd);
+void textPgUp( HWND hWnd, TextData *td, RenderData *rd, Mode mode );
+void textPgDown( HWND hWnd, TextData *td, RenderData *rd, Mode mode );
 
 
 #endif // TEXT_H_INCLUDED
