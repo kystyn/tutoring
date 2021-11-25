@@ -78,18 +78,21 @@ BOOL readFile( char *fileName, TextData *td )
     return TRUE;
 }
 
-void evalLastStringNumber( TextData *td, RenderData *rd,
-                           int *lastRow, int *lastSubstring )
+void evalLastStringNumber( TextData *td, RenderData *rd )
 {
     int
         rowCounter;
-    *lastRow = td->rowCount - 1,
-    *lastSubstring = td->substrCount[td->rowCount - 1] - 1;
+    rd->lastRow = td->rowCount - 1,
+    rd->lastSubstring = td->substrCount[td->rowCount - 1] - 1;
 
-    for (rowCounter = 0; rowCounter < rd->symsPerH; rowCounter += td->substrCount[*lastRow])
-        (*lastRow)--;
+    for (rowCounter = 0; ; rd->lastRow--)
+    {
+        rowCounter += td->substrCount[rd->lastRow];
+        if (rowCounter >= rd->symsPerH || rd->lastRow == 0)
+            break;
+    }
 
-    *lastSubstring = td->substrCount[*lastRow] - (rowCounter - rd->symsPerH);
+    rd->lastSubstring = max(0, rowCounter - rd->symsPerH);
 }
 
 void textRight( HWND hWnd, TextData *td, RenderData *rd )
@@ -149,14 +152,15 @@ void textDown( HWND hWnd, TextData *td, RenderData *rd, Mode mode )
         rd->currentRow = max(0, min(rd->currentRow + 1, td->rowCount - rd->symsPerH));
     else
     {
-        if (rd->currentSubstring != td->substrCount[rd->currentRow] - 1)
+        if (rd->currentRow == rd->lastRow &&
+            rd->currentSubstring == rd->lastSubstring)
+                ;
+        else if (rd->currentSubstring != td->substrCount[rd->currentRow] - 1)
             rd->currentSubstring++;
         else
         {
-            int lastRow, lastSubstring;
-            evalLastStringNumber(td, rd, &lastRow, &lastSubstring);
             // TODO check
-            rd->currentRow = max(rd->currentRow + 1, lastRow);
+            rd->currentRow = min(rd->currentRow + 1, rd->lastRow);
             rd->currentSubstring = 0;
         }
     }
@@ -214,24 +218,21 @@ void textPgDown(HWND hWnd, TextData *td, RenderData *rd, Mode mode)
             rd->currentSubstring += rd->symsPerH;
         else
         {
-            int lastRow, lastSubstring;
-            /* Evaluate number of last row and substring */
-            evalLastStringNumber(td, rd, &lastRow, &lastSubstring);
             /* Directly evaluate current row and substring */
-            for (rd->currentRow = min(rd->currentRow + 1, lastRow); ; rd->currentRow++)
+            for (rd->currentRow = min(rd->currentRow + 1, rd->lastRow); ; rd->currentRow++)
             {
                 screenRowCounter += td->substrCount[rd->currentRow];
 
-                if (rd->currentRow == lastRow)
+                if (rd->currentRow == rd->lastRow)
                     break;
                 if (screenRowCounter >= rd->symsPerH)
                     break;
             }
 
-            if (rd->currentRow != lastRow)
+            if (rd->currentRow != rd->lastRow)
                 rd->currentSubstring = td->substrCount[rd->currentRow] - (screenRowCounter - rd->symsPerH);
             else
-                rd->currentSubstring = lastSubstring;
+                rd->currentSubstring = rd->lastSubstring;
         }
     }
 

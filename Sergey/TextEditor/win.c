@@ -110,7 +110,10 @@ void WMSize( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm, int newW, 
     rd->symsPerH = newH / tm->tmHeight;
 
     if (mode == LAYOUT)
+    {
         evalSubstrCount(GetDC(hWnd), td, rd);
+        evalLastStringNumber(td, rd);
+    }
 }
 
 void WMKeyDown( HWND hWnd, WPARAM wParam,
@@ -160,6 +163,13 @@ void WMVScroll( HWND hWnd, WPARAM wParam,
     case SB_THUMBTRACK:
         GetScrollRange(hWnd, SB_VERT, &minScroll, &maxScroll);
         rd->currentRow = max(0, (float)(pos - minScroll) / (maxScroll - minScroll) * (td->rowCount - rd->symsPerH));
+
+        if (mode == LAYOUT && pos == maxScroll)
+        {
+            rd->currentRow = rd->lastRow;
+            rd->currentSubstring = rd->lastSubstring;
+        }
+
         pos = calcVScrollPos(td, rd, minScroll, maxScroll);
         SetScrollPos(hWnd, SB_VERT, pos, TRUE);
         printf("row: %i count: %i pos: %i\n", rd->currentRow, td->rowCount, pos);

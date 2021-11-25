@@ -7,6 +7,8 @@ typedef struct tagRenderData
 {
     int currentRow;     /* Current upper row */
     int currentSubstring;
+    int lastRow;
+    int lastSubstring;
     int currentColumn;  /* Current leftist symbol */
     int symsPerW;       /* Symbols count per screen width */
     int symsPerH;       /* Symbols count per screen height */
@@ -37,7 +39,7 @@ BOOL readFile( char *fileName, TextData *td );
 int calcSymbolsPerScreen( int width, int height, TEXTMETRIC *tm, RenderData *rd );
 
 int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd );
-
+void evalLastStringNumber( TextData *td, RenderData *rd );
 void evalSubstrCount( HDC hDC, TextData *td, RenderData *rd );
 
 int calcVScrollPos( TextData *td, RenderData *rd, int minScroll, int maxScroll );
