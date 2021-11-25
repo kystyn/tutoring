@@ -36,12 +36,12 @@ BOOL splitTextIntoStrings( TextData *td )
             }
         }
 
+    td->bufLen = strlen(td->buf);
     td->offsets[curStr++] = td->bufLen;
     // TODO
-    /*
+
     td->longestStringLen =
             max(td->longestStringLen, td->offsets[curStr - 1] - td->offsets[curStr - 2] - 1);
-            */
 
     return TRUE;
 }
@@ -57,6 +57,7 @@ BOOL readFile( char *fileName, TextData *td )
     td->bufLen = ftell(fp);
     rewind(fp);
     td->buf = malloc(sizeof(char) * (td->bufLen + 1));
+    memset(td->buf, 0, sizeof(char) * (td->bufLen + 1));
 
     if (td->buf == NULL)
     {

@@ -21,7 +21,7 @@
 1637758710 c:\users\damas\programsme\tutoring\sergey\texteditor\win.h
 	<windows.h>
 
-1637763277 source:c:\users\damas\programsme\tutoring\sergey\texteditor\win.c
+1637850365 source:c:\users\damas\programsme\tutoring\sergey\texteditor\win.c
 	<tchar.h>
 	<stdio.h>
 	"win.h"
@@ -30,7 +30,7 @@
 1637758714 c:\users\damas\programsme\tutoring\sergey\texteditor\text.h
 	<windows.h>
 
-1637763901 source:c:\users\damas\programsme\tutoring\sergey\texteditor\text.c
+1637850238 source:c:\users\damas\programsme\tutoring\sergey\texteditor\text.c
 	<stdio.h>
 	<math.h>
 	"text.h"

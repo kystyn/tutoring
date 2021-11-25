@@ -241,7 +241,7 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
     static HDC hDC;
     static HFONT hFont;
     static TEXTMETRIC tm;
-    static Mode mode = LAYOUT; //VIEW;
+    static Mode mode = VIEW;
     static int fontSize = 14;
     int rc;
 
