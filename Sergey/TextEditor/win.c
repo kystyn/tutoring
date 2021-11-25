@@ -3,12 +3,24 @@
 
 #include "win.h"
 #include "text.h"
+#include "menu.h"
 
 /*  Make the class name into a global variable  */
-TCHAR szClassName[ ] = _T("CodeBlocksWindowsApp");
+TCHAR szClassName[ ] = _T("SergeyReader");
 
 /* Declare window procedure */
 LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+void invalidateScreen( HWND hWnd )
+{
+    RECT rc;
+    GetWindowRect(hWnd, &rc);
+    rc.right = rc.right - rc.left;
+    rc.left = 0;
+    rc.bottom = rc.bottom - rc.top;
+    rc.top = 0;
+    InvalidateRect(hWnd, &rc, TRUE);
+}
 
 BOOL initWindow(HINSTANCE hThisInstance,
                 HINSTANCE hPrevInstance,
@@ -29,7 +41,7 @@ BOOL initWindow(HINSTANCE hThisInstance,
     wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
     wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
     wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
-    wincl.lpszMenuName = NULL;                 /* No menu */
+    wincl.lpszMenuName = szClassName;                 /* No menu */
     wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
     wincl.cbWndExtra = 0;                      /* structure or the window instance */
     /* Use Windows's default colour as the background of the window */
@@ -119,9 +131,6 @@ void WMSize( HWND hWnd, TextData *td, RenderData *rd, TEXTMETRIC *tm, int newW, 
 void WMKeyDown( HWND hWnd, WPARAM wParam,
                 TextData *td, RenderData *rd, Mode mode )
 {
-    RECT rc;
-    //GetScrollRange()
-
     switch (wParam)
     {
     case VK_RIGHT:
@@ -144,12 +153,7 @@ void WMKeyDown( HWND hWnd, WPARAM wParam,
         break;
     }
 
-    rc.top = 0;
-    rc.left = 0;
-    // TODO maybe pass width and height of screen received in WM_SIZE message
-    rc.bottom = rd->screenHeight;
-    rc.right = rd->screenWidth;
-    InvalidateRect(hWnd, &rc, TRUE);
+    invalidateScreen(hWnd);
 }
 
 void WMVScroll( HWND hWnd, WPARAM wParam,
@@ -188,14 +192,7 @@ void WMVScroll( HWND hWnd, WPARAM wParam,
         break;
     }
 
-    RECT rc;
-    // TODO
-    GetWindowRect(hWnd, &rc);
-    rc.right = rc.right - rc.left;
-    rc.left = 0;
-    rc.bottom = rc.bottom - rc.top;
-    rc.top = 0;
-    InvalidateRect(hWnd, &rc, TRUE);
+    invalidateScreen(hWnd);
 }
 
 void WMHScroll( HWND hWnd, WPARAM wParam,
@@ -225,13 +222,7 @@ void WMHScroll( HWND hWnd, WPARAM wParam,
         break;
     }
 
-    RECT rc;
-    GetWindowRect(hWnd, &rc);
-    rc.right = rc.right - rc.left;
-    rc.left = 0;
-    rc.bottom = rc.bottom - rc.top;
-    rc.top = 0;
-    InvalidateRect(hWnd, &rc, TRUE);
+    invalidateScreen(hWnd);
 }
 
 void saveFree( void *ptr )
@@ -253,7 +244,12 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
     static TEXTMETRIC tm;
     static Mode mode = VIEW;
     static int fontSize = 14;
+    static HMENU hMenu;
+    static OPENFILENAME ofn = { 0 };
+    char szFile[1000];
+
     int rc;
+    BOOL val;
 
     switch (message)                  /* handle the messages */
     {
@@ -266,6 +262,14 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
             PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
             break;
         case WM_CREATE:
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = hWnd;
+            ofn.lpstrFile = szFile ;
+            ofn.nMaxFile = sizeof(szFile);
+            ofn.lpstrFilter = "All\0*.*\0Text\0*.TXT\0";
+            ofn.nFilterIndex = 1;
+            ofn.lpstrFileTitle = NULL ;
+            ofn.nMaxFileTitle = 0 ;
             hFont = CreateFont(
                      fontSize,
                      0,
@@ -286,6 +290,7 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
             hDC = GetDC(hWnd);
             SelectObject(hDC, hFont);
             GetTextMetrics(hDC, &tm);
+
             rd.textHeight = tm.tmHeight;
             rc = readFile((char *)file_name, &td);
             if (!rc)
@@ -315,6 +320,53 @@ LRESULT CALLBACK WindowProcedure( HWND hWnd, UINT message, WPARAM wParam, LPARAM
         case WM_HSCROLL:
             if (mode == VIEW)
                 WMHScroll(hWnd, wParam, &td, &rd);
+            break;
+        case WM_COMMAND:
+            hMenu = GetMenu(hWnd);
+            switch (LOWORD(wParam))
+            {
+            case MENU_VIEW:
+                mode = VIEW;
+                CheckMenuItem(hMenu, MENU_VIEW, MF_CHECKED);
+                CheckMenuItem(hMenu, MENU_LAYOUT, MF_UNCHECKED);
+                rd.currentColumn = 0;
+                ShowScrollBar(hWnd, SB_HORZ, TRUE);
+                invalidateScreen(hWnd);
+                break;
+            case MENU_LAYOUT:
+                mode = LAYOUT;
+                CheckMenuItem(hMenu, MENU_VIEW, MF_UNCHECKED);
+                CheckMenuItem(hMenu, MENU_LAYOUT, MF_CHECKED);
+                rd.currentSubstring = 0;
+                ShowScrollBar(hWnd, SB_HORZ, FALSE);
+                invalidateScreen(hWnd);
+                break;
+            case MENU_OPEN:
+                saveFree(td.buf);
+                saveFree(td.offsets);
+                saveFree(td.substrCount);
+                memset(&td, 0, sizeof(td));
+
+                rd.currentRow = 0;
+                rd.currentColumn = 0;
+                rd.currentSubstring = 0;
+                SetScrollPos(hWnd, SB_HORZ, 0, TRUE);
+                SetScrollPos(hWnd, SB_VERT, 0, TRUE);
+
+                val = GetOpenFileName(&ofn);
+                if (!val)
+                {
+                    MessageBox(hWnd, "GetOpenFileName", NULL, MB_OK);
+                    break;
+                }
+                if (!readFile(ofn.lpstrFile, &td))
+                {
+                    MessageBox(hWnd, "File is not found or no memory", NULL, MB_OK);
+                    break;
+                }
+                invalidateScreen(hWnd);
+                break;
+            }
             break;
         default:                      /* for messages that we don't deal with */
             return DefWindowProc(hWnd, message, wParam, lParam);

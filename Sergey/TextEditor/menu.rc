@@ -1,0 +1,14 @@
+#include "menu.h"
+
+SergeyReader MENU
+{
+    POPUP "&File"
+    {
+        MENUITEM "&Open",  MENU_OPEN
+    }
+    POPUP "&Mode"
+    {
+        MENUITEM "&View",   MENU_VIEW,  CHECKED
+        MENUITEM "&Layout", MENU_LAYOUT
+    }
+}

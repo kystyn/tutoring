@@ -38,7 +38,6 @@ BOOL splitTextIntoStrings( TextData *td )
 
     td->bufLen = strlen(td->buf);
     td->offsets[curStr++] = td->bufLen;
-    // TODO
 
     td->longestStringLen =
             max(td->longestStringLen, td->offsets[curStr - 1] - td->offsets[curStr - 2] - 1);
@@ -159,7 +158,6 @@ void textDown( HWND hWnd, TextData *td, RenderData *rd, Mode mode )
             rd->currentSubstring++;
         else
         {
-            // TODO check
             rd->currentRow = min(rd->currentRow + 1, rd->lastRow);
             rd->currentSubstring = 0;
         }

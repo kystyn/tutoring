@@ -21,17 +21,23 @@
 1637758710 c:\users\damas\programsme\tutoring\sergey\texteditor\win.h
 	<windows.h>
 
-1637852626 source:c:\users\damas\programsme\tutoring\sergey\texteditor\win.c
+1637856009 source:c:\users\damas\programsme\tutoring\sergey\texteditor\win.c
 	<tchar.h>
 	<stdio.h>
 	"win.h"
 	"text.h"
+	"menu.h"
 
 1637852683 c:\users\damas\programsme\tutoring\sergey\texteditor\text.h
 	<windows.h>
 
-1637852578 source:c:\users\damas\programsme\tutoring\sergey\texteditor\text.c
+1637852783 source:c:\users\damas\programsme\tutoring\sergey\texteditor\text.c
 	<stdio.h>
 	<math.h>
 	"text.h"
+
+1637854308 source:c:\users\damas\programsme\tutoring\sergey\texteditor\menu.rc
+	"menu.h"
+
+1633617078 c:\users\damas\programsme\tutoring\sergey\texteditor\menu.h
 
