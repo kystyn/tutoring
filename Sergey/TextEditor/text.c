@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <math.h>
 #include "text.h"
@@ -23,11 +24,13 @@ BOOL splitTextIntoStrings( TextData *td )
         return FALSE;
     memset(td->substrCount, 0, sizeof(int) * td->rowCount);
 
+    assert(curStr <= td->rowCount);
     td->offsets[curStr++] = 0;
     td->longestStringLen = 0;
     for (i = 0; i < td->bufLen; i++)
         if (td->buf[i] == '\n')
         {
+            assert(curStr <= td->rowCount);
             td->offsets[curStr++] = i + 1;
             if (td->longestStringLen < td->offsets[curStr - 1] - td->offsets[curStr - 2] - 1)
             {
@@ -39,6 +42,7 @@ BOOL splitTextIntoStrings( TextData *td )
     td->bufLen = strlen(td->buf);
     td->offsets[curStr++] = td->bufLen;
 
+    assert(curStr - 1 <= td->rowCount);
     td->longestStringLen =
             max(td->longestStringLen, td->offsets[curStr - 1] - td->offsets[curStr - 2] - 1);
 
@@ -245,6 +249,7 @@ int evalSymsPerW( HDC hDC, TextData *td, RenderData *rd )
     int actualLen;
 
     SIZE size;
+    assert(td->longestStringIdx <= td->rowCount);
     GetTextExtentExPoint(hDC,
                          (LPCSTR)(str + td->offsets[td->longestStringIdx]),
                          strLen, rd->screenWidth, &actualLen, NULL, &size);

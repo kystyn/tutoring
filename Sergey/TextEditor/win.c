@@ -1,5 +1,6 @@
 #include <tchar.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "win.h"
 #include "text.h"
@@ -76,6 +77,7 @@ void WMPaint( HWND hWnd, TextData *td, RenderData *rd,
              HFONT hFont, Mode mode )
 {
     int y, sy;
+    int len;
     PAINTSTRUCT ps;
 
     HDC hDC = BeginPaint(hWnd, &ps);
@@ -83,23 +85,30 @@ void WMPaint( HWND hWnd, TextData *td, RenderData *rd,
     SelectObject(hDC, hFont);
     SetTextColor(hDC, RGB(255, 0, 0));
 
-
     if (mode == VIEW)
         for (y = rd->currentRow; y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
+        {
+            assert(y + 1 <= td->rowCount);
             TextOut(ps.hdc, 0, (y - rd->currentRow) * rd->textHeight,
                     td->buf + td->offsets[y] + rd->currentColumn,
                     min(rd->symsPerW,
-                        td->offsets[y + 1] - (td->offsets[y] + rd->currentColumn)));
+                        td->offsets[y + 1] - (td->offsets[y] + rd->currentColumn) - (td->buf[td->offsets[y + 1] - 1] == '\n')));
+        }
     else
     {
         int strNum = 0;
         for (y = rd->currentRow;
             strNum < rd->symsPerH && y < min(rd->currentRow + rd->symsPerH, td->rowCount); y++)
-            for (sy = y == rd->currentRow ? rd->currentSubstring : 0; sy < td->substrCount[y]; sy++, strNum++)
+        {
+            assert(y + 1 <= td->rowCount);
+            for (sy = y == rd->currentRow ? rd->currentSubstring : 0; sy < td->substrCount[y]; sy++, strNum++){
+                len = min(rd->symsPerW, td->offsets[y + 1] - (td->offsets[y] + sy * rd->symsPerW - (td->buf[td->offsets[y + 1] - 1] == '\n')));
+                if(sy == td->substrCount[y] - 1)
+                   len = len - 1;
                 TextOut(ps.hdc, 0, strNum * rd->textHeight,
-                    td->buf + td->offsets[y] + sy * rd->symsPerW,
-                    min(rd->symsPerW,
-                        td->offsets[y + 1] - (td->offsets[y] + sy * rd->symsPerW)));
+                    td->buf + td->offsets[y] + sy * rd->symsPerW, len);
+            }
+        }
     }
 
     EndPaint(hWnd, &ps);
